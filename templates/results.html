@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sentiment Analysis Summary</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .positive { color: #28a745; font-weight: bold; }
+        .negative { color: #dc3545; font-weight: bold; }
+        .neutral { color: #007bff; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>News Analysis Demo</h1>
+
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Sentiment</th>
+                <th>Source</th>
+                <th>Title</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in analysis_results %}
+            <tr>
+                <td class="{{ item.sentiment }}">
+                    {{ item.sentiment.upper() }}
+                </td>
+                <td>{{ item.source }}</td>
+                <td>{{ item.title }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+
+</body>
+</html>
