@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>History</title>
+</head>
+<body>
+    <h1>Analysis History</h1>
+
+    <a href="/">Run New Analysis</a>
+
+    <table border="1" cellpadding="5">
+        <tr>
+            <th>Title</th>
+            <th>Source</th>
+            <th>Sentiment</th>
+            <th>Score</th>
+            <th>Date</th>
+        </tr>
+
+        {% for item in results %}
+        <tr>
+            <td>{{ item.article.title }}</td>
+            <td>{{ item.article.source }}</td>
+            <td>{{ item.sentiment_label }}</td>
+            <td>{{ item.sentiment_score }}</td>
+            <td>{{ item.created_at }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</body>
+</html>
+

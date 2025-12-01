@@ -1,60 +1,130 @@
-
 from flask import Flask, render_template
-from newspaper import Article
+from newspaper import Article as NewsArticle
 from textblob import TextBlob
 from urllib.parse import urlparse
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
-# Initialize the Flask application
+
 app = Flask(__name__)
 
+# Database configuration
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///news.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+db = SQLAlchemy(app)
+
+
+# Database models
+class Article(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    url = db.Column(db.String(500), unique=True, nullable=False)
+    title = db.Column(db.String(300))
+    source = db.Column(db.String(200))
+    text = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class AnalysisResult(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    article_id = db.Column(db.Integer, db.ForeignKey("article.id"), nullable=False)
+    sentiment_label = db.Column(db.String(20))
+    sentiment_score = db.Column(db.Float)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    article = db.relationship("Article", backref=db.backref("analyses", lazy=True))
+
+
+# Sentiment helper
 def get_sentiment(text):
     polarity = TextBlob(text).sentiment.polarity
+
     if polarity > 0.1:
-        return "positive"
+        label = "positive"
     elif polarity < -0.1:
-        return "negative"
+        label = "negative"
     else:
-        return "neutral"
+        label = "neutral"
+
+    return label, polarity
+
+# Main Analysis Logic
 
 def run_sentiment_analysis():
     results = []
+
     try:
+        # Read URLs from sources.txt
         with open("sources.txt") as f:
             urls = [line.strip() for line in f if line.strip()]
 
         for url in urls:
-            a = Article(url)
+            # Use newspaper3k Article
+            a = NewsArticle(url)
             try:
                 a.download()
                 a.parse()
+
                 text = a.text or a.title
-                sentiment = get_sentiment(text)
-                
-                # Store the results
+                sentiment_label, sentiment_score = get_sentiment(text)
+                source_domain = urlparse(url).netloc
+
+                # DATABASE get or create Article row
+                article_row = Article.query.filter_by(url=url).first()
+                if not article_row:
+                    article_row = Article(
+                        url=url,
+                        title=a.title,
+                        source=source_domain,
+                        text=text,
+                    )
+                    db.session.add(article_row)
+                    db.session.commit()
+
+                # DATABASE create AnalysisResult row 
+                analysis = AnalysisResult(
+                    article_id=article_row.id,
+                    sentiment_label=sentiment_label,
+                    sentiment_score=sentiment_score,
+                )
+                db.session.add(analysis)
+                db.session.commit()
+
+                # Sends to template
                 results.append({
-                    'title': a.title, 
-                    'source': urlparse(url).netloc, 
-                    'sentiment': sentiment
+                    "title": a.title,
+                    "source": source_domain,
+                    "sentiment": sentiment_label,
+                    "sentiment_score": round(sentiment_score, 3),
                 })
+
             except Exception as e:
-                # Store failure message
                 results.append({
-                    'title': f"FAILED to parse article. Error: {e}", 
-                    'source': urlparse(url).netloc, 
-                    'sentiment': 'error'
+                    "title": f"FAILED to parse article. Error: {e}",
+                    "source": urlparse(url).netloc,
+                    "sentiment": "error",
                 })
+
     except FileNotFoundError:
-        # Handle case where sources.txt is missing
-        results.append({'title': "Error: sources.txt not found.", 'source': 'N/A', 'sentiment': 'error'})
+        results.append({
+            "title": "Error: sources.txt not found.",
+            "source": "N/A",
+            "sentiment": "error",
+        })
 
     return results
 
-@app.route('/')
+# Routes
+@app.route("/")
 def index():
-   
     analysis_results = run_sentiment_analysis()
-    return render_template('results.html', analysis_results=analysis_results)
+    return render_template("results.html", analysis_results=analysis_results)
 
-if __name__ == '__main__':
-    # Run the Flask web server
+@app.route("/history")
+def history():
+    results = AnalysisResult.query.all()
+    return render_template("history.html", results=results)
+
+# Run Server
+if __name__ == "__main__":
     app.run(debug=True)
