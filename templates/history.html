@@ -1,33 +1,48 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>History</title>
+    <meta charset="UTF-8">
+    <title>Analysis History</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .positive { color: #28a745; font-weight: bold; text-transform: uppercase; }
+        .negative { color: #dc3545; font-weight: bold; text-transform: uppercase; }
+        .neutral { color: #007bff; font-weight: bold; text-transform: uppercase; }
+    </style>
 </head>
 <body>
     <h1>Analysis History</h1>
 
-    <a href="/">Run New Analysis</a>
+    <p><a href="/">Run New Analysis</a></p>
 
-    <table border="1" cellpadding="5">
-        <tr>
-            <th>Title</th>
-            <th>Source</th>
-            <th>Sentiment</th>
-            <th>Score</th>
-            <th>Date</th>
-        </tr>
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Source</th>
+                <th>Sentiment</th>
+                <th>Score</th>
+                <th>Date</th>
+            </tr>
+        </thead>
 
+        <tbody>
         {% for item in results %}
-        <tr>
-            <td>{{ item.article.title }}</td>
-            <td>{{ item.article.source }}</td>
-            <td>{{ item.sentiment_label }}</td>
-            <td>{{ item.sentiment_score }}</td>
-            <td>{{ item.created_at }}</td>
-        </tr>
+            <tr>
+                <td>{{ item.article.title }}</td>
+                <td>{{ item.article.source }}</td>
+                <td class="{{ item.sentiment_label }}">{{ item.sentiment_label }}</td>
+                <td>{{ item.sentiment_score|round(3) }}</td>
+                <td>{{ item.created_at }}</td>
+            </tr>
         {% endfor %}
+        </tbody>
     </table>
 
 </body>
 </html>
+
 

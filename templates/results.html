@@ -5,12 +5,42 @@
     <title>Sentiment Analysis Summary</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         th { background-color: #f2f2f2; }
-        .positive { color: #28a745; font-weight: bold; }
-        .negative { color: #dc3545; font-weight: bold; }
-        .neutral { color: #007bff; font-weight: bold; }
+
+        .positive { color: #28a745; font-weight: bold; text-transform: uppercase; }
+        .negative { color: #dc3545; font-weight: bold; text-transform: uppercase; }
+        .neutral  { color: #007bff; font-weight: bold; text-transform: uppercase; }
+        .error    { color: #6c757d; font-weight: bold; text-transform: uppercase; }
+
+        .polarity-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 0.9rem;
+            display: inline-block;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .polarity-bar {
+            position: relative;
+            width: 120px;
+            height: 10px;
+            border-radius: 999px;
+            background: linear-gradient(to right, #dc3545, #cccccc, #28a745);
+            margin-top: 4px;
+        }
+
+        .polarity-marker {
+            position: absolute;
+            top: -3px;
+            width: 4px;
+            height: 16px;
+            border-radius: 2px;
+            background: #000;
+        }
     </style>
 </head>
 <body>
@@ -18,27 +48,120 @@
 
     <p><a href="/history">View History</a></p>
 
-     <form action="/analyze" method="post" style="margin-top: 20px; margin-bottom: 20px;">
+    <form action="/analyze" method="post" style="margin-top: 20px; margin-bottom: 20px;">
         <label for="url">Enter article URL:</label>
         <input type="url" id="url" name="url" required style="width: 60%; padding: 8px;">
         <button type="submit" style="padding: 8px 16px;">Analyse</button>
     </form>
 
+
+    {% if has_new and analysis_results|length > 0 %}
+    <h2>Newly Analysed Article</h2>
+
     <table>
         <thead>
             <tr>
                 <th>Sentiment</th>
+                <th>Polarity</th>
+                <th>Polarity Scale</th>
                 <th>Source</th>
                 <th>Title</th>
             </tr>
         </thead>
         <tbody>
-            {% for item in analysis_results %}
+            {% set item = analysis_results[0] %}
             <tr>
-                <td class="{{ item.sentiment }}">
-                    {{ item.sentiment.upper() }}
+                <td class="{{ item.sentiment }}">{{ item.sentiment }}</td>
+
+                <td>
+                    {% if item.sentiment_score is not none %}
+                        <span class="polarity-badge">
+                            {{ item.sentiment_score|round(2) }}
+                        </span>
+                    {% else %}
+                        -
+                    {% endif %}
                 </td>
-                <td>{{ item.source }}</td>
+
+                <td>
+                    {% if item.sentiment_score is not none %}
+                        {% set percent = ((item.sentiment_score + 1) / 2) * 100 %}
+                        <div class="polarity-bar">
+                            <div class="polarity-marker" style="left: {{ percent }}%;"></div>
+                        </div>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if item.url %}
+                        <a href="{{ item.url }}" target="_blank">{{ item.source }}</a>
+                    {% else %}
+                        {{ item.source }}
+                    {% endif %}
+                </td>
+
+                <td>{{ item.title }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <br>
+    {% endif %}
+
+    <h2>Popular / Pre-loaded Articles</h2>
+
+    {% if has_new %}
+        {% set popular_list = analysis_results[1:] %}
+    {% else %}
+        {% set popular_list = analysis_results %}
+    {% endif %}
+
+    <table>
+        <thead>
+            <tr>
+                <th>Sentiment</th>
+                <th>Polarity</th>
+                <th>Polarity Scale</th>
+                <th>Source</th>
+                <th>Title</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in popular_list %}
+            <tr>
+                <td class="{{ item.sentiment }}">{{ item.sentiment }}</td>
+
+                <td>
+                    {% if item.sentiment_score is not none %}
+                        <span class="polarity-badge">
+                            {{ item.sentiment_score|round(2) }}
+                        </span>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if item.sentiment_score is not none %}
+                        {% set percent = ((item.sentiment_score + 1) / 2) * 100 %}
+                        <div class="polarity-bar">
+                            <div class="polarity-marker" style="left: {{ percent }}%;"></div>
+                        </div>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if item.url %}
+                        <a href="{{ item.url }}" target="_blank">{{ item.source }}</a>
+                    {% else %}
+                        {{ item.source }}
+                    {% endif %}
+                </td>
+
                 <td>{{ item.title }}</td>
             </tr>
             {% endfor %}
@@ -47,3 +170,5 @@
 
 </body>
 </html>
+
+
