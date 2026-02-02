@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
 from newspaper import Article as NewsArticle
-from textblob import TextBlob
+from ml_sentiment import get_ml_sentiment
 from urllib.parse import urlparse
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
