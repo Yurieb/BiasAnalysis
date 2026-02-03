@@ -1,31 +1,42 @@
 from transformers import pipeline
 
-# Load sentiment model once (important for performance)
+# Load sentiment model one time for performance
 sentiment_pipeline = pipeline(
     "sentiment-analysis",
     model="cardiffnlp/twitter-roberta-base-sentiment"
 )
 
-def get_ml_sentiment(text):
+def get_ml_sentiment(text: str):
     """
-    Uses a Transformer-based model to analyse sentiment.
-    Returns: (label, score)
+    Analyse sentiment using a Transformer model.
+    Returns: (label, confidence)
     """
 
-    # Truncate long articles (model limit)
+    # Srict input validation
+    if text is None:
+        return "neutral", 0.0
+
+    text = text.strip()
+
+    if len(text) < 10:
+        return "neutral", 0.0
+
+    # Truncate long input
     text = text[:512]
 
-    result = sentiment_pipeline(text)[0]
+    try:
+        result = sentiment_pipeline(text)[0]
+    except Exception:
+        return "neutral", 0.0
 
-    raw_label = result["label"]
-    score = round(result["score"], 3)
+    raw_label = result.get("label", "").lower()
+    confidence = round(result.get("score", 0.0), 3)
 
-    # Map model labels to your system labels
-    if raw_label == "LABEL_2":
+    if "positive" in raw_label:
         label = "positive"
-    elif raw_label == "LABEL_0":
+    elif "negative" in raw_label:
         label = "negative"
     else:
         label = "neutral"
 
-    return label, score
+    return label, confidence
