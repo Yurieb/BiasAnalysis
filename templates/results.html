@@ -29,6 +29,11 @@
             height: 16px;
             background: #000;
         }
+
+        .framing {
+            font-size: 0.9em;
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -50,10 +55,12 @@
             <th>Confidence</th>
             <th>Confidence Level</th>
             <th>Bias (Language)</th>
+            <th>Framing</th>
             <th>Source</th>
             <th>Title</th>
         </tr>
     </thead>
+
     <tbody>
         {% for item in analysis_results %}
         <tr>
@@ -69,7 +76,17 @@
             </td>
 
             <td>
-                {{ item.bias.bias_level | upper }}
+            {{ item.bias.bias_level | upper }}<br>
+            <small>
+            
+            Emotive ratio: {{ item.bias.emotive_ratio }}<br>
+            Absolutist terms: {{ item.bias.absolutist_count }}
+            </small>
+            </td>
+
+            <td class="framing">
+                {{ item.framing.framing_bias | upper }}<br>
+                <small>{{ item.framing.framing_reason }}</small>
             </td>
 
             <td>
