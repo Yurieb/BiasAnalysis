@@ -2,14 +2,26 @@ import re
 
 # Words used to evoke strong emotion in headlines
 EMOTIVE_WORDS = {
-    "shocking", "outrage", "outraged", "crisis", "disaster", "chaos",
-    "slam", "slammed", "blow", "attack", "fury", "furious",
-    "devastating", "explosive", "dramatic"
+    # Strong negative emotion
+    "shocking", "outrage", "outraged", "crisis", "disaster",
+    "chaos", "fury", "furious", "devastating", "explosive",
+    "alarming", "dangerous", "threat", "threatening",
+
+    # Conflict language
+    "slam", "slammed", "attack", "blow", "clash", "battle",
+    "fight", "war", "accuse", "accused",
+
+    # Dramatic intensifiers
+    "dramatic", "massive", "huge", "extreme", "radical",
+    "critical", "severe", "urgent"
 }
 
 # Words that suggest exaggeration or absolute claims
 ABSOLUTIST_WORDS = {
-    "always", "never", "everyone", "no one", "nothing", "everything"
+    "always", "never", "everyone", "no one",
+    "nothing", "everything", "completely",
+    "entirely", "totally", "absolutely",
+    "all", "none"
 }
 
 
@@ -41,11 +53,11 @@ def analyse_bias_language(text: str):
     emotive_count = sum(1 for w in words if w in EMOTIVE_WORDS)
     absolutist_count = sum(1 for w in words if w in ABSOLUTIST_WORDS)
 
-    # Normalise emotive language by article length
+    # Calculate Emotional Ratio
     emotive_ratio = emotive_count / total_words
 
     # Simple threshold based bias classification
-    if emotive_ratio > 0.015 or absolutist_count >= 3:
+    if emotive_ratio > 0.01 or absolutist_count >= 2:
         bias_level = "moderate"
     else:
         bias_level = "low"

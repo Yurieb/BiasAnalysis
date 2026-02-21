@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 from newspaper import Article as NewsArticle
-from ml_sentiment import get_ml_sentiment          
+
+from ml_sentiment import run_dual_sentiment  
 from bias_analysis import analyse_bias_language     
 from urllib.parse import urlparse
 from flask_sqlalchemy import SQLAlchemy
@@ -16,7 +17,6 @@ db = SQLAlchemy(app)
 
 # Confidence helper
 def confidence_level(score: float) -> str:
-    # Convert model score into a readable level
     if score >= 0.75:
         return "high"
     elif score >= 0.55:
@@ -24,37 +24,6 @@ def confidence_level(score: float) -> str:
     else:
         return "low"
 
-
-# Framing bias
-def analyse_framing_bias(sentiment, confidence, bias_level):
-    """
-    Interpret sentiment and language bias together.
-    No new analysis, only reasoning.
-    """
-
-    # Default assumption
-    framing_bias = "low"
-    reason = "No strong framing detected"
-
-    # Neutral sentiment but biased language
-    if sentiment == "neutral" and bias_level in ["moderate", "high"]:
-        framing_bias = "moderate"
-        reason = "Neutral tone with emotive or exaggerated language"
-
-    # Emotional sentiment with biased language
-    elif sentiment in ["positive", "negative"] and bias_level in ["moderate", "high"]:
-        framing_bias = "high"
-        reason = "Emotional sentiment reinforced by biased language"
-
-    # Low confidence means interpretation 
-    if confidence == "low":
-        framing_bias = "low"
-        reason = "Low model confidence, framing unclear"
-
-    return {
-        "framing_bias": framing_bias,
-        "framing_reason": reason
-    }
 
 # Database models
 class Article(db.Model):
@@ -75,6 +44,7 @@ class AnalysisResult(db.Model):
 
     article = db.relationship("Article", backref=db.backref("analyses", lazy=True))
 
+
 # Analyse single URL
 def analyze_single_url(url):
     a = NewsArticle(url)
@@ -83,19 +53,21 @@ def analyze_single_url(url):
 
     text = a.text or a.title or ""
 
-# sentiment
-    sentiment_label, sentiment_score = get_ml_sentiment(text)
+    # Run BOTH sentiment models
+    sentiment_data = run_dual_sentiment(text)
+
+    sentiment_label = sentiment_data["roberta_label"]
+    sentiment_score = sentiment_data["roberta_score"]
+
+    textblob_label = sentiment_data["textblob_label"]
+    textblob_score = sentiment_data["textblob_score"]
+
+    agreement = sentiment_data["agreement"]
+
     conf_level = confidence_level(sentiment_score)
 
-# language bias
+    # language bias
     bias_info = analyse_bias_language(text)
-
-# framing bias
-    framing_info = analyse_framing_bias(
-        sentiment_label,
-        conf_level,
-        bias_info["bias_level"]
-    )
 
     source_domain = urlparse(url).netloc
 
@@ -122,11 +94,18 @@ def analyze_single_url(url):
         "title": a.title,
         "source": source_domain,
         "url": url,
+        # RoBERTa (main model)
         "sentiment": sentiment_label,
         "sentiment_score": sentiment_score,
         "confidence_level": conf_level,
+
+        #TextBlob baseline
+        "textblob_label": textblob_label,
+        "textblob_score": textblob_score,
+        "agreement": agreement,
+
+        # Existing layers
         "bias": bias_info,
-        "framing": framing_info
     }
 
 

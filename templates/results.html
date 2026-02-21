@@ -2,43 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>News Sentiment Analysis</title>
+    <title>News Sentiment & Bias Analysis</title>
 
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; vertical-align: top; }
         th { background-color: #f2f2f2; }
 
         .positive { color: #28a745; font-weight: bold; }
         .negative { color: #dc3545; font-weight: bold; }
         .neutral  { color: #007bff; font-weight: bold; }
 
-        .confidence-bar {
-            position: relative;
-            width: 120px;
-            height: 10px;
-            background: #e0e0e0;
-            border-radius: 5px;
-        }
-
-        .confidence-marker {
-            position: absolute;
-            top: -3px;
-            width: 4px;
-            height: 16px;
-            background: #000;
-        }
-
-        .framing {
-            font-size: 0.9em;
-            color: #333;
-        }
+        small { color: #555; font-weight: normal; }
     </style>
 </head>
 <body>
 
-<h1>News Sentiment Analysis (Transformer-based)</h1>
+<h1>News Sentiment & Bias Analysis</h1>
 <p><a href="/history">View History</a></p>
 
 <form action="/analyze" method="post">
@@ -51,11 +32,21 @@
 <table>
     <thead>
         <tr>
-            <th>Sentiment</th>
-            <th>Confidence</th>
-            <th>Confidence Level</th>
-            <th>Bias (Language)</th>
-            <th>Framing</th>
+            <th>
+                RoBERTa <br>
+                <small>Emotional direction and model confidence</small>
+            </th>
+
+            <th>
+                TextBlob<br>
+                <small>Lexicon tone score (-1 negative → +1 positive)</small>
+            </th>
+
+            <th>
+                Language Bias<br>
+                <small>Amount of emotional or exaggerated wording</small>
+            </th>
+
             <th>Source</th>
             <th>Title</th>
         </tr>
@@ -64,31 +55,37 @@
     <tbody>
         {% for item in analysis_results %}
         <tr>
-            <td class="{{ item.sentiment }}">{{ item.sentiment }}</td>
 
-            <td>{{ item.sentiment_score | round(2) }}</td>
-
+            <!-- RoBERTa -->
             <td>
-                {% set percent = item.sentiment_score * 100 %}
-                <div class="confidence-bar">
-                    <div class="confidence-marker" style="left: {{ percent }}%;"></div>
+                <div class="{{ item.sentiment }}">
+                    {{ item.sentiment | upper }}
                 </div>
+                <small>
+                    Confidence: {{ (item.sentiment_score * 100) | round(1) }}%
+                </small>
             </td>
 
+            <!-- TextBlob -->
             <td>
-            {{ item.bias.bias_level | upper }}<br>
-            <small>
-            
-            Emotive ratio: {{ item.bias.emotive_ratio }}<br>
-            Absolutist terms: {{ item.bias.absolutist_count }}
-            </small>
+                <div class="{{ item.textblob_label }}">
+                    {{ item.textblob_label | upper }}
+                </div>
+                <small>
+                    Score: {{ item.textblob_score }}
+                </small>
             </td>
 
-            <td class="framing">
-                {{ item.framing.framing_bias | upper }}<br>
-                <small>{{ item.framing.framing_reason }}</small>
+            <!-- Bias -->
+            <td>
+                <strong>{{ item.bias.bias_level | upper }}</strong><br>
+                <small>
+                    Emotional: {{ (item.bias.emotive_ratio * 100) | round(2) }}%<br>
+                    Absolutist: {{ item.bias.absolutist_count }}
+                </small>
             </td>
 
+            <!-- Source -->
             <td>
                 {% if item.url %}
                     <a href="{{ item.url }}" target="_blank">{{ item.source }}</a>
@@ -97,7 +94,9 @@
                 {% endif %}
             </td>
 
+            <!-- Title -->
             <td>{{ item.title }}</td>
+
         </tr>
         {% endfor %}
     </tbody>
