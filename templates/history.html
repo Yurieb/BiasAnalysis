@@ -8,9 +8,9 @@
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background-color: #f2f2f2; }
-        .positive { color: #28a745; font-weight: bold; text-transform: uppercase; }
-        .negative { color: #dc3545; font-weight: bold; text-transform: uppercase; }
-        .neutral { color: #007bff; font-weight: bold; text-transform: uppercase; }
+        .positive, .supportive { color: #0d6b2f; font-weight: bold; }
+        .negative, .critical { color: #c41e3a; font-weight: bold; }
+        .neutral, .balanced { color: #0d47a1; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -23,7 +23,7 @@
             <tr>
                 <th>Title</th>
                 <th>Source</th>
-                <th>Sentiment</th>
+                <th>Narrative Direction</th>
                 <th>Score</th>
                 <th>Date</th>
             </tr>
@@ -34,7 +34,11 @@
             <tr>
                 <td>{{ item.article.title }}</td>
                 <td>{{ item.article.source }}</td>
-                <td class="{{ item.sentiment_label }}">{{ item.sentiment_label }}</td>
+                <td class="{{ item.sentiment_label }}">
+                    {% if item.sentiment_label == 'positive' %}Supportive
+                    {% elif item.sentiment_label == 'negative' %}Critical
+                    {% else %}Balanced{% endif %}
+                </td>
                 <td>{{ item.sentiment_score|round(3) }}</td>
                 <td>{{ item.created_at }}</td>
             </tr>

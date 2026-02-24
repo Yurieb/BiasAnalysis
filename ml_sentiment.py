@@ -1,13 +1,5 @@
 from transformers import pipeline
-
-# Load sentiment model one time for performance
-sentiment_pipeline = pipeline(
-    "sentiment-analysis",
-    model="cardiffnlp/twitter-roberta-base-sentiment"
-)
-from transformers import pipeline
 from textblob import TextBlob
-
 
 # Load Transformer model one time
 sentiment_pipeline = pipeline(
@@ -16,15 +8,15 @@ sentiment_pipeline = pipeline(
 )
 
 
-
-# RoBERTa Transformer Sentiment (Main ML Model)
+# -----------------------------
+# RoBERTa Transformer Sentiment
+# -----------------------------
 def get_ml_sentiment(text: str):
     """
-    Analyse sentiment using RoBERTa Transformer model.
+    Analyse sentiment using RoBERTa.
     Returns: (label, confidence)
     """
 
-    # Strict input validation
     if text is None:
         return "neutral", 0.0
 
@@ -52,12 +44,14 @@ def get_ml_sentiment(text: str):
 
     return label, confidence
 
-# TextBlob Baseline Sentiment (Lexicon-Based Model)
+
+# -----------------------------
+# TextBlob Sentiment
+# -----------------------------
 def get_textblob_sentiment(text: str):
     """
     Analyse sentiment using TextBlob.
-    This is a lexicon-based baseline model.
-    Returns: (label, polarity score from -1 to +1)
+    Returns: (label, polarity -1 to +1)
     """
 
     if not text:
@@ -66,39 +60,74 @@ def get_textblob_sentiment(text: str):
     blob = TextBlob(text)
     polarity = round(blob.sentiment.polarity, 3)
 
-    # TextBlob polarity range: -1 to +1
-    if polarity > 0.1:
+    if polarity > 0.05:
         label = "positive"
-    elif polarity < -0.1:
+    elif polarity < -0.05:
         label = "negative"
     else:
         label = "neutral"
 
     return label, polarity
 
-# Dual Sentiment Wrapper Comparison Layer
+
+
+# Normalise TextBlob to 0–100
+def normalize_textblob(polarity: float):
+    return round((polarity + 1) / 2 * 100, 2)
+
+
+# Narrative Direction (user-facing, replaces Positive/Negative/Neutral)
+def to_narrative_direction(internal_label: str, polarity: float) -> tuple[str, int]:
+    """
+    Map internal sentiment to user-facing Narrative Direction.
+    Returns: (display_label, score -100 to +100)
+    -100 = strongly critical, 0 = balanced, +100 = strongly supportive
+    """
+    score = int(round(polarity * 100))
+
+    if internal_label == "positive":
+        if abs(polarity) >= 0.5:
+            return "Strongly Supportive", score
+        return "Leans Supportive", score
+    elif internal_label == "negative":
+        if abs(polarity) >= 0.5:
+            return "Strongly Critical", score
+        return "Leans Critical", score
+    else:
+        return "Balanced", score
+
+
+
+# Dual Sentiment and Narrative Framing Score
 def run_dual_sentiment(text: str):
-    """
-    Runs BOTH:
-    - RoBERTa (Transformer ML)
-    - TextBlob (Lexicon baseline)
 
-    Returns structured comparison.
-    """
-
-    # Run RoBERTa
     rob_label, rob_score = get_ml_sentiment(text)
+    roberta_percent = round(rob_score * 100, 2)
 
-    # Run TextBlob
     tb_label, tb_score = get_textblob_sentiment(text)
+    textblob_percent = normalize_textblob(tb_score)
 
-    # Check if both models agree
+    narrative_direction_label, narrative_direction_score = to_narrative_direction(
+        rob_label, tb_score
+    )
+
+    # Framing Intensity 0-100 — how strongly the article pushes in that direction
+    framing_intensity = int(round(roberta_percent))
+
     agreement = rob_label == tb_label
 
     return {
         "roberta_label": rob_label,
         "roberta_score": rob_score,
+        "roberta_percent": roberta_percent,
+
         "textblob_label": tb_label,
         "textblob_score": tb_score,
-        "agreement": agreement
+        "textblob_percent": textblob_percent,
+
+        "narrative_direction_label": narrative_direction_label,
+        "narrative_direction_score": narrative_direction_score,
+        "framing_intensity": framing_intensity,
+
+        "agreement": agreement,
     }

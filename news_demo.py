@@ -1,11 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for
 from newspaper import Article as NewsArticle
 
-from ml_sentiment import run_dual_sentiment  
-from bias_analysis import analyse_bias_language     
+from ml_sentiment import run_dual_sentiment
+from bias_analysis import analyse_bias_language
 from urllib.parse import urlparse
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+import re
 
 app = Flask(__name__)
 
@@ -13,6 +14,43 @@ app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///news.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
+
+# Category keywords for classification
+CATEGORY_KEYWORDS = {
+    "Politics": [
+        "election", "vote", "government", "president", "congress", "parliament",
+        "minister", "policy", "politician", "democrat", "republican", "senate",
+        "legislation", "budget", "political", "campaign", "candidate"
+    ],
+    "Health": [
+        "covid", "vaccine", "hospital", "doctor", "medical", "health", "patient",
+        "disease", "treatment", "virus", "pandemic", "diagnosis", "therapy",
+        "mental health", "clinical", "pharmaceutical"
+    ],
+    "Environment": [
+        "climate", "environment", "carbon", "emissions", "renewable", "solar",
+        "wind", "pollution", "biodiversity", "conservation", "sustainability",
+        "wildfire", "flood", "drought", "green", "eco"
+    ],
+    "Sports": [
+        "game", "match", "team", "player", "championship", "league", "score",
+        "football", "soccer", "basketball", "tennis", "olympics", "tournament",
+        "coach", "season", "playoff"
+    ],
+}
+
+
+def detect_category(title: str, text: str) -> str:
+    combined = f"{(title or '')} {(text or '')}".lower()
+    words = set(re.findall(r"\b\w+\b", combined))
+    scores = {}
+
+    for category, keywords in CATEGORY_KEYWORDS.items():
+        matches = sum(1 for kw in keywords if kw in combined)
+        scores[category] = matches
+
+    best = max(scores, key=scores.get)
+    return best if scores[best] >= 1 else "General"
 
 
 # Confidence helper
@@ -58,16 +96,24 @@ def analyze_single_url(url):
 
     sentiment_label = sentiment_data["roberta_label"]
     sentiment_score = sentiment_data["roberta_score"]
+    roberta_percent = sentiment_data["roberta_percent"]
 
     textblob_label = sentiment_data["textblob_label"]
     textblob_score = sentiment_data["textblob_score"]
+    textblob_percent = sentiment_data["textblob_percent"]
+
+    narrative_direction_label = sentiment_data["narrative_direction_label"]
+    narrative_direction_score = sentiment_data["narrative_direction_score"]
+    framing_intensity = sentiment_data["framing_intensity"]
 
     agreement = sentiment_data["agreement"]
-
     conf_level = confidence_level(sentiment_score)
 
-    # language bias
+    # Language bias
     bias_info = analyse_bias_language(text)
+
+    # Category context
+    category = detect_category(a.title or "", text)
 
     source_domain = urlparse(url).netloc
 
@@ -94,17 +140,25 @@ def analyze_single_url(url):
         "title": a.title,
         "source": source_domain,
         "url": url,
-        # RoBERTa (main model)
+        "category": category,
+
+        # Narrative framing (user-facing)
+        "narrative_direction_label": narrative_direction_label,
+        "narrative_direction_score": narrative_direction_score,
+        "framing_intensity": framing_intensity,
+
+        # Internal for DB
         "sentiment": sentiment_label,
         "sentiment_score": sentiment_score,
+        "roberta_percent": roberta_percent,
         "confidence_level": conf_level,
 
-        #TextBlob baseline
         "textblob_label": textblob_label,
         "textblob_score": textblob_score,
+        "textblob_percent": textblob_percent,
+
         "agreement": agreement,
 
-        # Existing layers
         "bias": bias_info,
     }
 
