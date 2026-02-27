@@ -2,3 +2,8 @@ Flask
 textblob
 newspaper3k
 flask_sqlalchemy
+transformers
+vaderSentiment
+google-generativeai
+python-dotenv
+trafilatura

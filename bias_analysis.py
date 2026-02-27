@@ -1,27 +1,71 @@
 import re
 
 # Words used to evoke strong emotion in headlines
+# Expanded from ~40 to ~150 words for better coverage across news topics
 EMOTIVE_WORDS = {
     # Strong negative emotion
     "shocking", "outrage", "outraged", "crisis", "disaster",
     "chaos", "fury", "furious", "devastating", "explosive",
-    "alarming", "dangerous", "threat", "threatening",
+    "alarming", "dangerous", "threat", "threatening", "horrific",
+    "terrible", "awful", "dreadful", "appalling", "horrifying",
+    "terrifying", "nightmarish", "catastrophic", "tragic", "heartbreaking",
+    "disturbing", "frightening", "dire", "grim", "harrowing",
 
-    # Conflict language
-    "slam", "slammed", "attack", "blow", "clash", "battle",
-    "fight", "war", "accuse", "accused",
+    # Conflict & aggression language
+    "slam", "slammed", "attack", "attacked", "blow", "clash", "clashes",
+    "battle", "fight", "war", "accuse", "accused", "blasted", "hammered",
+    "condemned", "denounced", "lashed", "slammed", "ripped", "tore",
+    "crushed", "destroyed", "obliterated", "annihilated", "decimated",
+    "ambush", "assault", "confrontation", "escalation", "standoff",
+    "crackdown", "siege", "hostage", "violence", "brutal", "vicious",
 
     # Dramatic intensifiers
     "dramatic", "massive", "huge", "extreme", "radical",
-    "critical", "severe", "urgent"
+    "critical", "severe", "urgent", "unprecedented", "extraordinary",
+    "stunning", "bombshell", "explosive", "sensational", "staggering",
+    "jaw-dropping", "mind-blowing", "unbelievable", "incredible", "astounding",
+    "earth-shattering", "game-changing", "groundbreaking", "landmark",
+
+    # Fear & panic language
+    "panic", "fear", "scared", "frightened", "terror", "dread",
+    "anxiety", "hysteria", "paranoia", "peril", "danger", "risk",
+    "vulnerability", "exposed", "defenceless", "helpless", "desperate",
+
+    # Outrage & moral language
+    "shameful", "disgraceful", "scandalous", "corrupt", "betrayal",
+    "betrayed", "lied", "deceived", "manipulated", "exploited",
+    "abused", "victimised", "persecuted", "oppressed", "silenced",
+    "suppressed", "censored", "banned", "blocked", "forbidden",
+
+    # Loaded political language
+    "regime", "puppet", "propaganda", "brainwashing", "indoctrination",
+    "extremist", "radical", "fanatic", "militant", "insurgent",
+    "coup", "tyranny", "tyrannical", "authoritarian", "dictator",
+
+    # Positive hype language (also emotive — just positive direction)
+    "triumphant", "glorious", "heroic", "magnificent", "spectacular",
+    "phenomenal", "extraordinary", "outstanding", "brilliant", "genius",
+    "revolutionary", "visionary", "historic", "legendary", "iconic"
 }
 
-# Certainty language: strong assertions, exaggeration frequency
+# Certainty / absolutist language — overstates facts, sign of biased writing
 CERTAINTY_WORDS = {
-    "always", "never", "everyone", "no one",
-    "nothing", "everything", "completely",
-    "entirely", "totally", "absolutely",
-    "all", "none"
+    # Classic absolutist words
+    "always", "never", "everyone", "nobody", "no one",
+    "nothing", "everything", "completely", "entirely",
+    "totally", "absolutely", "utterly", "perfectly",
+    "all", "none", "every", "any", "anywhere", "everywhere",
+    "nowhere", "forever", "impossible", "inevitable", "certain",
+    "definitely", "undoubtedly", "unquestionably", "obviously",
+    "clearly", "plainly", "simply", "merely", "just",
+
+    # Exaggerated frequency
+    "constantly", "continuously", "endlessly", "repeatedly",
+    "invariably", "without exception", "in every case",
+
+    # False certainty in reporting
+    "proves", "confirms", "demonstrates", "shows conclusively",
+    "undeniable", "irrefutable", "incontrovertible", "beyond doubt"
 }
 
 
@@ -85,3 +129,29 @@ def analyse_bias_language(text: str):
         "bias_level": bias_level,
         "total_words": total_words,
     }
+
+def compute_bias_intensity(emotive_ratio, certainty_per_1000):
+
+    # Convert emotional % (0–1) to 0–100 scale
+    emotional_score = emotive_ratio * 100
+
+    # Normalize certainty (cap at 10 per 1k words)
+    certainty_score = min(certainty_per_1000, 10) * 10
+
+    # Weighted bias intensity
+    bias_score = int(round(
+        (0.6 * emotional_score) +
+        (0.4 * certainty_score)
+    ))
+
+    # Clamp
+    bias_score = min(bias_score, 100)
+
+    if bias_score < 25:
+        level = "Low"
+    elif bias_score < 50:
+        level = "Moderate"
+    else:
+        level = "High"
+
+    return bias_score, level

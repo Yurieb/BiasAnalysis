@@ -1,234 +1,280 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>News Narrative & Bias Analysis</title>
+<meta charset="UTF-8">
+<title>MediaLens — Narrative & Bias Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg:#f5f4f0;
+    --surface:#ffffff;
+    --border:#e1ded8;
+    --text:#1a1814;
+    --muted:#7a756c;
+    --accent:#2a5abf;
+    --positive:#1a7f52;
+    --negative:#b83232;
+    --neutral:#4a52a8;
+}
 
-    <style>
-        body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 24px; max-width: 1400px; margin-left: auto; margin-right: auto; }
-        h1 { color: #1a1a2e; margin-bottom: 4px; }
-        h2 { color: #16213e; margin-top: 24px; font-size: 1.1em; }
-        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; vertical-align: top; }
-        th { background-color: #f8f9fa; font-weight: 600; }
+* { box-sizing:border-box; margin:0; padding:0; }
 
-        /* Narrative direction colors */
-        .supportive { color: #0d6b2f; font-weight: 600; }
-        .critical { color: #c41e3a; font-weight: 600; }
-        .balanced { color: #0d47a1; font-weight: 600; }
+body {
+    font-family:'DM Sans', sans-serif;
+    background:var(--bg);
+    color:var(--text);
+}
 
-        /* Bias level colors */
-        .bias-low { color: #2e7d32; background: #e8f5e9; padding: 2px 8px; border-radius: 4px; }
-        .bias-moderate { color: #f57c00; background: #fff3e0; padding: 2px 8px; border-radius: 4px; }
-        .bias-high { color: #c62828; background: #ffebee; padding: 2px 8px; border-radius: 4px; }
+.header {
+    background:var(--surface);
+    padding:18px 40px;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
 
-        /* Visual bar scale */
-        .narrative-bar-container {
-            display: flex; align-items: center; gap: 8px; margin: 4px 0;
-        }
-        .narrative-bar {
-            flex: 1; height: 12px; background: linear-gradient(to right, #c41e3a 0%, #e0e0e0 50%, #0d6b2f 100%);
-            border-radius: 6px; position: relative; max-width: 120px;
-        }
-        .narrative-bar-marker {
-            position: absolute; width: 4px; height: 18px; background: #1a1a2e;
-            top: -3px; border-radius: 2px; left: calc(50% + {{ 0 }}%); margin-left: -2px;
-        }
-        .bar-labels { font-size: 11px; color: #666; margin-top: 2px; }
-        .bar-label-left { color: #c41e3a; }
-        .bar-label-mid { color: #666; }
-        .bar-label-right { color: #0d6b2f; }
+.logo { font-family:'DM Serif Display', serif; font-size:20px; }
+.logo span { color:var(--accent); }
 
-        /* Bias bar */
-        .bias-bar-container { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
-        .bias-bar {
-            flex: 1; height: 10px; background: #e0e0e0; border-radius: 5px;
-            max-width: 80px; overflow: hidden;
-        }
-        .bias-bar-fill {
-            height: 100%; border-radius: 5px; transition: width 0.3s;
-        }
-        .bias-bar-fill.low { background: #4caf50; }
-        .bias-bar-fill.moderate { background: #ff9800; }
-        .bias-bar-fill.high { background: #f44336; }
+.main { max-width:850px; margin:40px auto; padding:0 20px; }
 
-        .what-we-measure {
-            background: #f0f4f8; border-left: 4px solid #0d47a1; padding: 16px 20px;
-            margin: 20px 0; border-radius: 0 8px 8px 0; font-size: 0.95em; line-height: 1.5;
-        }
-        .what-we-measure h3 { margin: 0 0 12px 0; color: #0d47a1; }
-        .what-we-measure ul { margin: 0; padding-left: 20px; }
-        .what-we-measure li { margin: 6px 0; }
+.hero h1 { font-family:'DM Serif Display', serif; font-size:34px; margin-bottom:10px; }
+.hero p { color:var(--muted); font-size:14px; margin-bottom:30px; }
 
-        .definitions { font-size: 12px; color: #555; margin-top: 8px; }
-        small { color: #666; font-weight: normal; }
+.search-bar { display:flex; gap:10px; margin-bottom:35px; }
+.search-bar input {
+    flex:1; padding:12px; border:1px solid var(--border);
+    border-radius:6px; font-size:14px; font-family:'DM Sans', sans-serif;
+}
+.search-bar button {
+    background:var(--accent); color:white; border:none;
+    padding:12px 20px; border-radius:6px; font-weight:600;
+    cursor:pointer; font-family:'DM Sans', sans-serif;
+}
 
-        .category-badge {
-            display: inline-block; padding: 4px 10px; border-radius: 6px;
-            font-size: 12px; font-weight: 500;
-        }
-        .cat-politics { background: #e3f2fd; color: #1565c0; }
-        .cat-health { background: #e8f5e9; color: #2e7d32; }
-        .cat-environment { background: #e0f7fa; color: #00838f; }
-        .cat-sports { background: #fff3e0; color: #e65100; }
-        .cat-general { background: #f5f5f5; color: #616161; }
+.card {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:12px; padding:26px 28px; margin-bottom:28px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.06);
+}
 
-        form { margin: 16px 0; }
-        input[type="url"] { width: 60%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 6px; }
-        button { padding: 10px 20px; background: #0d47a1; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; }
-        button:hover { background: #1565c0; }
-        a { color: #0d47a1; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-    </style>
+.card-header { display:flex; justify-content:space-between; align-items:flex-start; }
+
+.category-pill { font-size:11px; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+
+.card-title { font-weight:600; font-size:15px; margin-bottom:4px; line-height:1.35; }
+.card-title a { color:var(--text); text-decoration:none; }
+.card-title a:hover { color:var(--accent); }
+.card-source { font-size:12px; }
+.card-source a { color:var(--accent); text-decoration:none; }
+
+.score-number { font-size:30px; font-weight:600; }
+.score-number.positive { color:var(--positive); }
+.score-number.negative { color:var(--negative); }
+.score-number.neutral  { color:var(--neutral); }
+.score-block { text-align:right; }
+.score-label { font-size:11px; color:var(--muted); margin-top:2px; }
+
+.spectrum { margin:18px 0; }
+.bar {
+    height:6px; background:linear-gradient(to right,#b83232,#ddd,#1a7f52);
+    border-radius:4px; position:relative;
+}
+.marker {
+    position:absolute; top:-4px; width:14px; height:14px;
+    background:#000; border-radius:50%; transform:translateX(-50%);
+}
+.labels { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:6px; }
+
+.metrics {
+    display:grid; grid-template-columns:repeat(3,1fr);
+    gap:12px; margin:20px 0 14px;
+}
+.metric {
+    background:#f1efea; border:1px solid var(--border);
+    border-radius:8px; padding:14px; font-size:13px; color:var(--muted);
+}
+.metric strong { display:block; font-size:18px; font-weight:600; color:var(--text); margin:4px 0 4px; }
+.metric-desc { font-size:11px; color:var(--muted); line-height:1.4; }
+
+.bias-rating {
+    display:inline-block; margin-top:5px;
+    font-size:11px; font-weight:600; padding:2px 8px; border-radius:99px;
+}
+.bias-rating.low      { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
+.bias-rating.moderate { background:#fffbeb; color:#b45309; border:1px solid #fde68a; }
+.bias-rating.high     { background:#fff1f2; color:#b91c1c; border:1px solid #fecdd3; }
+
+.card-footer {
+    display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+    padding-top:12px; margin-top:4px; border-top:1px solid var(--border);
+}
+.tag {
+    background:#f1efea; border:1px solid var(--border);
+    border-radius:6px; padding:4px 10px; font-size:11px;
+    font-weight:500; color:var(--muted);
+}
+.tag.agree    { background:#f0fdf4; color:#15803d; border-color:#bbf7d0; }
+.tag.disagree { background:#fff1f2; color:#b91c1c; border-color:#fecdd3; }
+.tag.div-high { background:#fff7ed; color:#c2410c; border-color:#fed7aa; }
+
+.engine-toggle {
+    margin-top:14px; padding:10px 0; font-size:13px;
+    cursor:pointer; color:var(--accent); font-weight:500;
+}
+.engine-breakdown {
+    display:none; margin-top:12px; padding:18px;
+    background:#f1efea; border:1px solid var(--border); border-radius:8px; font-size:13px;
+}
+.engine-box {
+    margin-bottom:14px; padding:12px 14px;
+    background:var(--surface); border:1px solid var(--border); border-radius:6px;
+}
+.engine-box:last-child { margin-bottom:0; }
+.engine-box strong { display:block; margin-bottom:4px; }
+
+.empty-state {
+    text-align:center; padding:60px 20px;
+    color:var(--muted); font-size:14px;
+}
+</style>
 </head>
 <body>
 
-<h1>News Narrative & Bias Analysis</h1>
-<p><a href="/history">View History</a></p>
+<header class="header">
+    <div class="logo">Media<span>Lens</span></div>
+    <div><a href="/history">View History &rarr;</a></div>
+</header>
 
-<form action="/analyze" method="post">
-    <input type="url" name="url" required placeholder="Paste news article URL...">
+<main class="main">
+
+<div class="hero">
+    <h1>Narrative &amp; Bias Analysis</h1>
+    <p>Hybrid sentiment fusion using RoBERTa, VADER, TextBlob, and Gemini.</p>
+</div>
+
+<form class="search-bar" method="POST" action="/analyze">
+    <input type="url" name="url" placeholder="Paste article URL..." required>
     <button type="submit">Analyse</button>
 </form>
 
 
-<h2>Results</h2>
 
-<table>
-    <thead>
-        <tr>
-            <th>Category</th>
-            <th>
-                RoBERTa (AI)<br>
-                <small>Transformer model · emotional direction + confidence</small>
-            </th>
-            <th>
-                TextBlob (Lexicon)<br>
-                <small>Rule-based · polarity (-1 to +1) + normalised %</small>
-            </th>
-            <th>
-                Narrative Direction<br>
-                <small>Combined · which way the narrative leans</small>
-            </th>
-            <th>
-                Main Score: Narrative Direction<br>
-                <small>-100 (critical) to +100 (supportive), 0 = balanced</small>
-            </th>
-            <th>
-                Framing Intensity<br>
-                <small>How strongly the article pushes (0–100)</small>
-            </th>
-            <th>
-                Bias Intensity Score<br>
-                <small>Low (0–25) | Moderate (26–50) | High (51–100)</small>
-            </th>
-            <th>
-                Language Bias Details<br>
-                <small>Emotive % · Certainty per 1000 words</small>
-            </th>
-            <th>Source</th>
-            <th>Title</th>
-        </tr>
-    </thead>
+{% for result in analysis_results %}
+<div class="card">
 
-    <tbody>
-        {% for item in analysis_results %}
-        <tr>
-            <!-- Category -->
-            <td>
-                <span class="category-badge cat-{{ item.category | lower }}">{{ item.category }}</span>
-            </td>
+<div class="card-header">
+    <div>
+        <div class="category-pill">{{ result.category }}</div>
+        <div class="card-title">
+            <a href="{{ result.url }}" target="_blank">{{ result.title }}</a>
+        </div>
+        <div class="card-source">
+            <a href="https://{{ result.source }}" target="_blank">{{ result.source }}</a>
+        </div>
+    </div>
+    <div class="score-block">
+        <div class="score-number {% if result.narrative_direction_score > 10 %}positive{% elif result.narrative_direction_score < -10 %}negative{% else %}neutral{% endif %}">
+            {% if result.narrative_direction_score > 0 %}+{% endif %}{{ result.narrative_direction_score }}
+        </div>
+        <div class="score-label">{{ result.narrative_direction_label }}</div>
+    </div>
+</div>
 
-            <!-- RoBERTa (AI) -->
-            <td>
-                {% set rb_label = item.sentiment %}
-                <span class="{% if rb_label == 'positive' %}supportive{% elif rb_label == 'negative' %}critical{% else %}balanced{% endif %}">
-                    {% if rb_label == 'positive' %}Supportive{% elif rb_label == 'negative' %}Critical{% else %}Balanced{% endif %}
-                </span>
-                <br><small>Confidence: {{ item.roberta_percent }}%</small>
-            </td>
+<div class="spectrum">
+    <div class="bar">
+        <div class="marker" data-score="{{ result.narrative_direction_score }}"></div>
+    </div>
+    <div class="labels"><span>Critical</span><span>Balanced</span><span>Supportive</span></div>
+</div>
 
-            <!-- TextBlob (Lexicon) -->
-            <td>
-                {% set tb_label = item.textblob_label %}
-                <span class="{% if tb_label == 'positive' %}supportive{% elif tb_label == 'negative' %}critical{% else %}balanced{% endif %}">
-                    {% if tb_label == 'positive' %}Supportive{% elif tb_label == 'negative' %}Critical{% else %}Balanced{% endif %}
-                </span>
-                <br><small>Polarity: {{ item.textblob_score }} · Normalised: {{ item.textblob_percent }}%</small>
-            </td>
+<div class="metrics">
+    <div class="metric">
+        Emotional
+        <strong>{{ "%.1f" | format(result.bias.emotive_ratio * 100) }}%</strong>
+        <span class="metric-desc">words e.g. crisis, outrage</span>
+    </div>
+    <div class="metric">
+        Exaggerated
+        <strong>{{ result.bias.certainty_per_1000 }}</strong>
+        <span class="metric-desc"> words e.g. always, never </span>
+    </div>
+    <div class="metric">
+        Bias
+        <strong>{{ result.bias.bias_intensity_score }}/100</strong>
+        <span class="bias-rating {{ result.bias.bias_level }}">{{ result.bias.bias_level | capitalize }}</span>
+    </div>
+</div>
 
-            <!-- Narrative Direction (combined) -->
-            <td>
-                {% set nd = item.narrative_direction_label %}
-                {% if 'Supportive' in nd %}
-                    <span class="supportive">{{ nd }}</span>
-                {% elif 'Critical' in nd %}
-                    <span class="critical">{{ nd }}</span>
-                {% else %}
-                    <span class="balanced">{{ nd }}</span>
-                {% endif %}
-            </td>
+<div class="card-footer">
+    <span class="tag">RoBERTa {{ result.roberta_label }}</span>
+    <span class="tag">VADER {{ result.vader_label }}</span>
+    <span class="tag">TextBlob {{ result.textblob_label }}</span>
+    <span class="tag">Gemini {{ result.gemini_label }}</span>
+    {% if result.agreement %}
+        <span class="tag agree">All models agree</span>
+    {% else %}
+        <span class="tag disagree">Models disagree</span>
+    {% endif %}
+    <span class="tag {% if result.divergence_level == 'High' %}div-high{% endif %}">
+    Model Difference: {{ result.divergence_level }}
+    </span>
+</div>
 
-            <!-- Main score with visual bar (-100 to +100) -->
-            <td>
-                <strong>{{ item.narrative_direction_score }}</strong>
-                <div class="narrative-bar-container">
-                    <div class="narrative-bar" style="position: relative;">
-                        <div class="narrative-bar-marker" style="left: calc(50% + {{ (item.narrative_direction_score / 100) * 50 }}%); margin-left: -2px; transform: translateX(-50%);"></div>
-                    </div>
-                </div>
-                <div class="bar-labels">
-                    <span class="bar-label-left">Critical</span>
-                    <span class="bar-label-mid"> · 0 · </span>
-                    <span class="bar-label-right">Supportive</span>
-                </div>
-            </td>
+<div class="engine-toggle" onclick="toggleBreakdown(this)">&#9658; Engine breakdown</div>
+<div class="engine-breakdown">
+    <div class="engine-box">
+        <strong>RoBERTa – 40%</strong>
+        {{ result.roberta_label }} · {{ result.roberta_percent }}% — Model that reads the article and understands the overall tone of the text.
+    </div>
 
-            <!-- Framing Intensity -->
-            <td>
-                <strong>{{ item.framing_intensity }}%</strong>
-            </td>
+    <div class="engine-box">
+        <strong>VADER – 25%</strong>
+        {{ result.vader_label }} · {{ result.vader_percent }}% — Looks at positive and negative words in the article to estimate sentiment.
+    </div>
 
-            <!-- Bias Intensity Score with visual bar -->
-            <td>
-                <span class="bias-{{ item.bias.bias_level }}">{{ item.bias.bias_level | upper }}</span>
-                <div class="bias-bar-container">
-                    <div class="bias-bar">
-                        <div class="bias-bar-fill {{ item.bias.bias_level }}" style="width: {{ item.bias.bias_intensity_score }}%;"></div>
-                    </div>
-                    <span class="definitions">{{ item.bias.bias_intensity_score }}/100</span>
-                </div>
-                <div class="definitions">
-                    {% if item.bias.bias_level == 'low' %}Measured, factual language
-                    {% elif item.bias.bias_level == 'moderate' %}Some emotive or certainty language
-                    {% else %}Heavy emotional or absolute framing{% endif %}
-                </div>
-            </td>
+    <div class="engine-box">
+        <strong>TextBlob – 15%</strong>
+        {{ result.textblob_label }} · {{ result.textblob_percent }}% — Uses a dictionary of words to check if the language is positive or negative.
+    </div>
 
-            <!-- Language bias details -->
-            <td>
-                <small>
-                    Emotional: {{ (item.bias.emotive_ratio * 100) | round(2) }}%<br>
-                    Certainty: {{ item.bias.certainty_per_1000 }} per 1000 words
-                </small>
-            </td>
+    <div class="engine-box">
+        <strong>Gemini – 20%</strong>
+        {{ result.gemini_label }} · {{ result.gemini_percent }}% —  AI model that reads the article and judges the tone like a real person.
+    </div>
 
-            <!-- Source -->
-            <td>
-                {% if item.url %}
-                    <a href="{{ item.url }}" target="_blank">{{ item.source }}</a>
-                {% else %}
-                    {{ item.source }}
-                {% endif %}
-            </td>
+    <div class="engine-box">
+        <strong>Model Difference</strong>
+        {{ result.divergence_level }} ({{ result.model_difference }}%) — Shows how much the AI models disagree about the article's tone.
+    </div>
+</div>
 
-            <!-- Title -->
-            <td>{{ item.title }}</td>
+</div>
+{% else %}
+<div class="empty-state">No articles analysed yet. Paste a URL above to get started.</div>
+{% endfor %}
 
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+</main>
 
+<script>
+// Position spectrum bar markers from data-score attribute
+document.querySelectorAll('.marker[data-score]').forEach(function(marker) {
+    var score = parseFloat(marker.getAttribute('data-score'));
+    var left = ((score + 100) / 200 * 100).toFixed(1);
+    marker.style.left = left + '%';
+});
+
+function toggleBreakdown(el) {
+    const breakdown = el.nextElementSibling;
+    if (breakdown.style.display === "block") {
+        breakdown.style.display = "none";
+        el.innerHTML = "&#9658; Engine breakdown";
+    } else {
+        breakdown.style.display = "block";
+        el.innerHTML = "&#9660; Engine breakdown";
+    }
+}
+</script>
 </body>
 </html>

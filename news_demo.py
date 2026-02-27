@@ -1,7 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for
 from newspaper import Article as NewsArticle
+import trafilatura
 
-from ml_sentiment import run_dual_sentiment
+from ml_sentiment import run_sentiment_pipeline
 from bias_analysis import analyse_bias_language
 from urllib.parse import urlparse
 from flask_sqlalchemy import SQLAlchemy
@@ -42,7 +43,6 @@ CATEGORY_KEYWORDS = {
 
 def detect_category(title: str, text: str) -> str:
     combined = f"{(title or '')} {(text or '')}".lower()
-    words = set(re.findall(r"\b\w+\b", combined))
     scores = {}
 
     for category, keywords in CATEGORY_KEYWORDS.items():
@@ -89,39 +89,61 @@ def analyze_single_url(url):
     a.download()
     a.parse()
 
-    text = a.text or a.title or ""
+    title = a.title or ""
+    text  = a.text  or ""
 
-    # Run BOTH sentiment models
-    sentiment_data = run_dual_sentiment(text)
+    # If newspaper3k got too little text paywalled JS-heavy site
+    # fall back to trafilatura which handles more site types
+    if len(text.split()) < 50:
+        downloaded = trafilatura.fetch_url(url)
+        fallback   = trafilatura.extract(downloaded) or ""
+        if len(fallback.split()) > len(text.split()):
+            text = fallback
+
+    # Final fallback at minimum use the title so pipeline doesn't crash
+    if not text:
+        text = title
+
+    # Run full 3-engine sentiment pipeline
+    sentiment_data = run_sentiment_pipeline(text)
 
     sentiment_label = sentiment_data["roberta_label"]
-    sentiment_score = sentiment_data["roberta_score"]
+    sentiment_score = sentiment_data["roberta_percent"] / 100
     roberta_percent = sentiment_data["roberta_percent"]
 
-    textblob_label = sentiment_data["textblob_label"]
-    textblob_score = sentiment_data["textblob_score"]
+    vader_label   = sentiment_data["vader_label"]
+    vader_percent = sentiment_data["vader_percent"]
+
+    textblob_label   = sentiment_data["textblob_label"]
     textblob_percent = sentiment_data["textblob_percent"]
+
+    gemini_label   = sentiment_data.get("gemini_label", "neutral")
+    gemini_percent = sentiment_data.get("gemini_percent", 50.0)
 
     narrative_direction_label = sentiment_data["narrative_direction_label"]
     narrative_direction_score = sentiment_data["narrative_direction_score"]
-    framing_intensity = sentiment_data["framing_intensity"]
+    framing_intensity         = sentiment_data["framing_intensity"]
 
-    agreement = sentiment_data["agreement"]
+    agreement        = sentiment_data["agreement"]
+    model_difference = sentiment_data["model_difference"]
+    divergence_level = sentiment_data["divergence_level"]
+
     conf_level = confidence_level(sentiment_score)
 
     # Language bias
     bias_info = analyse_bias_language(text)
 
     # Category context
-    category = detect_category(a.title or "", text)
+    category = detect_category(title, text)
 
     source_domain = urlparse(url).netloc
 
+    # Save article to DB
     article_row = Article.query.filter_by(url=url).first()
     if not article_row:
         article_row = Article(
             url=url,
-            title=a.title,
+            title=title,
             source=source_domain,
             text=text,
         )
@@ -137,7 +159,7 @@ def analyze_single_url(url):
     db.session.commit()
 
     return {
-        "title": a.title,
+        "title": title,
         "source": source_domain,
         "url": url,
         "category": category,
@@ -147,17 +169,28 @@ def analyze_single_url(url):
         "narrative_direction_score": narrative_direction_score,
         "framing_intensity": framing_intensity,
 
-        # Internal for DB
-        "sentiment": sentiment_label,
-        "sentiment_score": sentiment_score,
+        # Individual engine results (used by template)
+        "roberta_label": sentiment_label,
         "roberta_percent": roberta_percent,
         "confidence_level": conf_level,
 
+        "vader_label": vader_label,
+        "vader_percent": vader_percent,
+
         "textblob_label": textblob_label,
-        "textblob_score": textblob_score,
         "textblob_percent": textblob_percent,
 
+        "gemini_label": gemini_label,
+        "gemini_percent": gemini_percent,
+
+        # DB fields
+        "sentiment": sentiment_label,
+        "sentiment_score": sentiment_score,
+
+        # Model agreement / divergence
         "agreement": agreement,
+        "model_difference": model_difference,
+        "divergence_level": divergence_level,
 
         "bias": bias_info,
     }
@@ -169,7 +202,15 @@ def run_sentiment_analysis():
 
     try:
         with open("sources.txt") as f:
-            urls = [line.strip() for line in f if line.strip()]
+            urls = []
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                # Handle "Category|URL" format — strip the category prefix
+                if "|" in line:
+                    line = line.split("|", 1)[1].strip()
+                urls.append(line)
     except FileNotFoundError:
         return []
 
