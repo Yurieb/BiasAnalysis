@@ -1,13 +1,6 @@
-Neutral Factual News
-https://www.lovindublin.com/news/heavy-rain-set-to-batter-dublin-as-storm-dave-brews-177057
-https://www.thesun.ie/news/16577678/dublin-weather-forecast-met-eireann-storm-dave/
-
-
-Politics
-https://www.rte.ie/news/business/2026/0223/1559911-eu-us-tariffs/
-https://www.nbcnews.com/politics/white-house/us-womens-hockey-team-declines-trumps-invitation-state-union-rcna260299
-
-
-Sports
-https://www.bbc.com/sport/football/articles/c98ql5ml885o
-https://www.bbc.com/sport/football/articles/cn8zlp3gepyo
+Neutral Factual News|https://www.lovindublin.com/news/heavy-rain-set-to-batter-dublin-as-storm-dave-brews-177057
+Neutral Factual News|https://www.thesun.ie/news/16577678/dublin-weather-forecast-met-eireann-storm-dave/
+Politics|https://www.rte.ie/news/business/2026/0223/1559911-eu-us-tariffs/
+Politics|https://www.nbcnews.com/politics/white-house/us-womens-hockey-team-declines-trumps-invitation-state-union-rcna260299
+Sports|https://www.bbc.com/sport/football/articles/c98ql5ml885o
+Sports|https://www.bbc.com/sport/football/articles/cn8zlp3gepyo

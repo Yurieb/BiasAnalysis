@@ -85,3 +85,29 @@ def analyse_bias_language(text: str):
         "bias_level": bias_level,
         "total_words": total_words,
     }
+
+def compute_bias_intensity(emotive_ratio, certainty_per_1000):
+
+    # Convert emotional % (0–1) to 0–100 scale
+    emotional_score = emotive_ratio * 100
+
+    # Normalize certainty (cap at 10 per 1k words)
+    certainty_score = min(certainty_per_1000, 10) * 10
+
+    # Weighted bias intensity
+    bias_score = int(round(
+        (0.6 * emotional_score) +
+        (0.4 * certainty_score)
+    ))
+
+    # Clamp
+    bias_score = min(bias_score, 100)
+
+    if bias_score < 25:
+        level = "Low"
+    elif bias_score < 50:
+        level = "Moderate"
+    else:
+        level = "High"
+
+    return bias_score, level

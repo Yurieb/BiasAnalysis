@@ -2,3 +2,5 @@ Flask
 textblob
 newspaper3k
 flask_sqlalchemy
+transformers
+vaderSentiment

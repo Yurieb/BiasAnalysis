@@ -1,7 +1,8 @@
+
 from flask import Flask, render_template, request, redirect, url_for
 from newspaper import Article as NewsArticle
 
-from ml_sentiment import run_dual_sentiment
+from ml_sentiment import run_sentiment_pipeline
 from bias_analysis import analyse_bias_language
 from urllib.parse import urlparse
 from flask_sqlalchemy import SQLAlchemy
@@ -42,7 +43,6 @@ CATEGORY_KEYWORDS = {
 
 def detect_category(title: str, text: str) -> str:
     combined = f"{(title or '')} {(text or '')}".lower()
-    words = set(re.findall(r"\b\w+\b", combined))
     scores = {}
 
     for category, keywords in CATEGORY_KEYWORDS.items():
@@ -91,22 +91,27 @@ def analyze_single_url(url):
 
     text = a.text or a.title or ""
 
-    # Run BOTH sentiment models
-    sentiment_data = run_dual_sentiment(text)
+    # Run full 3-engine sentiment pipeline
+    sentiment_data = run_sentiment_pipeline(text)
 
     sentiment_label = sentiment_data["roberta_label"]
-    sentiment_score = sentiment_data["roberta_score"]
+    sentiment_score = sentiment_data["roberta_percent"] / 100
     roberta_percent = sentiment_data["roberta_percent"]
 
-    textblob_label = sentiment_data["textblob_label"]
-    textblob_score = sentiment_data["textblob_score"]
+    vader_label   = sentiment_data["vader_label"]
+    vader_percent = sentiment_data["vader_percent"]
+
+    textblob_label   = sentiment_data["textblob_label"]
     textblob_percent = sentiment_data["textblob_percent"]
 
     narrative_direction_label = sentiment_data["narrative_direction_label"]
     narrative_direction_score = sentiment_data["narrative_direction_score"]
-    framing_intensity = sentiment_data["framing_intensity"]
+    framing_intensity         = sentiment_data["framing_intensity"]
 
-    agreement = sentiment_data["agreement"]
+    agreement        = sentiment_data["agreement"]
+    model_difference = sentiment_data["model_difference"]
+    divergence_level = sentiment_data["divergence_level"]
+
     conf_level = confidence_level(sentiment_score)
 
     # Language bias
@@ -117,6 +122,7 @@ def analyze_single_url(url):
 
     source_domain = urlparse(url).netloc
 
+    # Save article to DB 
     article_row = Article.query.filter_by(url=url).first()
     if not article_row:
         article_row = Article(
@@ -147,17 +153,22 @@ def analyze_single_url(url):
         "narrative_direction_score": narrative_direction_score,
         "framing_intensity": framing_intensity,
 
-        # Internal for DB
+        #  Internal for DB
         "sentiment": sentiment_label,
         "sentiment_score": sentiment_score,
         "roberta_percent": roberta_percent,
         "confidence_level": conf_level,
 
+        "vader_label": vader_label,
+        "vader_percent": vader_percent,
+
         "textblob_label": textblob_label,
-        "textblob_score": textblob_score,
         "textblob_percent": textblob_percent,
 
+        # Model agreement / divergence
         "agreement": agreement,
+        "model_difference": model_difference,
+        "divergence_level": divergence_level,
 
         "bias": bias_info,
     }
