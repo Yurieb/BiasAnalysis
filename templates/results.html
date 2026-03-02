@@ -98,6 +98,41 @@ body {
 .metric strong { display:block; font-size:18px; font-weight:600; color:var(--text); margin:4px 0 4px; }
 .metric-desc { font-size:11px; color:var(--muted); line-height:1.4; }
 
+.bias-rating {
+    display:inline-block; margin-top:5px;
+    font-size:11px; font-weight:600; padding:2px 8px; border-radius:99px;
+}
+.bias-rating.low      { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
+.bias-rating.moderate { background:#fffbeb; color:#b45309; border:1px solid #fde68a; }
+.bias-rating.high     { background:#fff1f2; color:#b91c1c; border:1px solid #fecdd3; }
+
+.card-footer {
+    display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+    padding-top:12px; margin-top:4px; border-top:1px solid var(--border);
+}
+.tag {
+    background:#f1efea; border:1px solid var(--border);
+    border-radius:6px; padding:4px 10px; font-size:11px;
+    font-weight:500; color:var(--muted);
+}
+.tag.agree    { background:#f0fdf4; color:#15803d; border-color:#bbf7d0; }
+.tag.disagree { background:#fff1f2; color:#b91c1c; border-color:#fecdd3; }
+.tag.div-high { background:#fff7ed; color:#c2410c; border-color:#fed7aa; }
+
+.engine-toggle {
+    margin-top:14px; padding:10px 0; font-size:13px;
+    cursor:pointer; color:var(--accent); font-weight:500;
+}
+.engine-breakdown {
+    display:none; margin-top:12px; padding:18px;
+    background:#f1efea; border:1px solid var(--border); border-radius:8px; font-size:13px;
+}
+.engine-box {
+    margin-bottom:14px; padding:12px 14px;
+    background:var(--surface); border:1px solid var(--border); border-radius:6px;
+}
+.engine-box:last-child { margin-bottom:0; }
+.engine-box strong { display:block; margin-bottom:4px; }
 </style>
 </head>
 <body>
@@ -141,6 +176,19 @@ body {
     <div class="metric">Exaggerated<strong>3.1</strong><span class="metric-desc">Absolute words e.g. always, never per 1k</span></div>
     <div class="metric">Bias<strong>22/100</strong><span class="bias-rating low">Low</span></div>
 </div>
+<div class="card-footer">
+    <span class="tag">RoBERTa negative</span>
+    <span class="tag">VADER negative</span>
+    <span class="tag">TextBlob neutral</span>
+    <span class="tag disagree">Models disagree</span>
+    <span class="tag">Divergence: Moderate</span>
+</div>
+<div class="engine-toggle" onclick="toggleBreakdown(this)">&#9658; Engine breakdown</div>
+<div class="engine-breakdown">
+    <div class="engine-box"><strong>RoBERTa &ndash; 50%</strong>negative &middot; 71.4% &mdash; context-aware transformer.</div>
+    <div class="engine-box"><strong>VADER &ndash; 30%</strong>negative &middot; 43.2% &mdash; negation-aware scoring.</div>
+    <div class="engine-box"><strong>TextBlob &ndash; 20%</strong>neutral &middot; 48.1% &mdash; lexicon baseline.</div>
+    <div class="engine-box"><strong>Divergence</strong>Moderate (28.2%) &mdash; spread between model scores.</div>
 </div>
 </div>
 
@@ -166,6 +214,19 @@ body {
     <div class="metric">Exaggerated<strong>2.8</strong><span class="metric-desc">Absolute words e.g. always, never per 1k</span></div>
     <div class="metric">Bias<strong>29/100</strong><span class="bias-rating moderate">Moderate</span></div>
 </div>
+<div class="card-footer">
+    <span class="tag">RoBERTa negative</span>
+    <span class="tag">VADER negative</span>
+    <span class="tag">TextBlob negative</span>
+    <span class="tag agree">All models agree</span>
+    <span class="tag">Divergence: Moderate</span>
+</div>
+<div class="engine-toggle" onclick="toggleBreakdown(this)">&#9658; Engine breakdown</div>
+<div class="engine-breakdown">
+    <div class="engine-box"><strong>RoBERTa &ndash; 50%</strong>negative &middot; 68.9%</div>
+    <div class="engine-box"><strong>VADER &ndash; 30%</strong>negative &middot; 40.5%</div>
+    <div class="engine-box"><strong>TextBlob &ndash; 20%</strong>negative &middot; 42.3%</div>
+    <div class="engine-box"><strong>Divergence</strong>Moderate (28.4%)</div>
 </div>
 </div>
 
@@ -191,6 +252,19 @@ body {
     <div class="metric">Exaggerated<strong>4.4</strong><span class="metric-desc">Absolute words e.g. always, never per 1k</span></div>
     <div class="metric">Bias<strong>34/100</strong><span class="bias-rating moderate">Moderate</span></div>
 </div>
+<div class="card-footer">
+    <span class="tag">RoBERTa negative</span>
+    <span class="tag">VADER neutral</span>
+    <span class="tag">TextBlob neutral</span>
+    <span class="tag disagree">Models disagree</span>
+    <span class="tag">Divergence: Moderate</span>
+</div>
+<div class="engine-toggle" onclick="toggleBreakdown(this)">&#9658; Engine breakdown</div>
+<div class="engine-breakdown">
+    <div class="engine-box"><strong>RoBERTa &ndash; 50%</strong>negative &middot; 77.1%</div>
+    <div class="engine-box"><strong>VADER &ndash; 30%</strong>neutral &middot; 49.8%</div>
+    <div class="engine-box"><strong>TextBlob &ndash; 20%</strong>neutral &middot; 47.2%</div>
+    <div class="engine-box"><strong>Divergence</strong>Moderate (29.9%)</div>
 </div>
 </div>
 
@@ -216,6 +290,19 @@ body {
     <div class="metric">Exaggerated<strong>5.2</strong><span class="metric-desc">Absolute words e.g. always, never per 1k</span></div>
     <div class="metric">Bias<strong>38/100</strong><span class="bias-rating moderate">Moderate</span></div>
 </div>
+<div class="card-footer">
+    <span class="tag">RoBERTa negative</span>
+    <span class="tag">VADER negative</span>
+    <span class="tag">TextBlob neutral</span>
+    <span class="tag disagree">Models disagree</span>
+    <span class="tag div-high">Divergence: High</span>
+</div>
+<div class="engine-toggle" onclick="toggleBreakdown(this)">&#9658; Engine breakdown</div>
+<div class="engine-breakdown">
+    <div class="engine-box"><strong>RoBERTa &ndash; 50%</strong>negative &middot; 84.2%</div>
+    <div class="engine-box"><strong>VADER &ndash; 30%</strong>negative &middot; 38.7%</div>
+    <div class="engine-box"><strong>TextBlob &ndash; 20%</strong>neutral &middot; 44.3%</div>
+    <div class="engine-box"><strong>Divergence</strong>High (45.5%)</div>
 </div>
 </div>
 
@@ -241,6 +328,19 @@ body {
     <div class="metric">Exaggerated<strong>1.9</strong><span class="metric-desc">Absolute words e.g. always, never per 1k</span></div>
     <div class="metric">Bias<strong>12/100</strong><span class="bias-rating low">Low</span></div>
 </div>
+<div class="card-footer">
+    <span class="tag">RoBERTa positive</span>
+    <span class="tag">VADER positive</span>
+    <span class="tag">TextBlob positive</span>
+    <span class="tag agree">All models agree</span>
+    <span class="tag">Divergence: Moderate</span>
+</div>
+<div class="engine-toggle" onclick="toggleBreakdown(this)">&#9658; Engine breakdown</div>
+<div class="engine-breakdown">
+    <div class="engine-box"><strong>RoBERTa &ndash; 50%</strong>positive &middot; 73.5%</div>
+    <div class="engine-box"><strong>VADER &ndash; 30%</strong>positive &middot; 61.2%</div>
+    <div class="engine-box"><strong>TextBlob &ndash; 20%</strong>positive &middot; 58.9%</div>
+    <div class="engine-box"><strong>Divergence</strong>Moderate (14.6%)</div>
 </div>
 </div>
 
@@ -266,6 +366,19 @@ body {
     <div class="metric">Exaggerated<strong>1.4</strong><span class="metric-desc">Absolute words e.g. always, never per 1k</span></div>
     <div class="metric">Bias<strong>9/100</strong><span class="bias-rating low">Low</span></div>
 </div>
+<div class="card-footer">
+    <span class="tag">RoBERTa neutral</span>
+    <span class="tag">VADER neutral</span>
+    <span class="tag">TextBlob neutral</span>
+    <span class="tag agree">All models agree</span>
+    <span class="tag">Divergence: Moderate</span>
+</div>
+<div class="engine-toggle" onclick="toggleBreakdown(this)">&#9658; Engine breakdown</div>
+<div class="engine-breakdown">
+    <div class="engine-box"><strong>RoBERTa &ndash; 50%</strong>neutral &middot; 61.0%</div>
+    <div class="engine-box"><strong>VADER &ndash; 30%</strong>neutral &middot; 50.8%</div>
+    <div class="engine-box"><strong>TextBlob &ndash; 20%</strong>neutral &middot; 49.3%</div>
+    <div class="engine-box"><strong>Divergence</strong>Moderate (11.7%)</div>
 </div>
 </div>
 
