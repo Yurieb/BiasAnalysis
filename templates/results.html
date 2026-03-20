@@ -144,7 +144,7 @@ body {
 
 <header class="header">
     <div class="logo">Media<span>Lens</span></div>
-    <div><a href="/history">View History &rarr;</a></div>
+    <div><a href="/compare">Compare Sources</a> &nbsp;|&nbsp; <a href="/history">View History &rarr;</a></div>
 </header>
 
 <main class="main">
@@ -193,12 +193,12 @@ body {
     <div class="metric">
         Emotional
         <strong>{{ "%.1f" | format(result.bias.emotive_ratio * 100) }}%</strong>
-        <span class="metric-desc">words e.g. crisis, outrage</span>
+        <span class="metric-desc">Charged words e.g. crisis, outrage</span>
     </div>
     <div class="metric">
         Exaggerated
         <strong>{{ result.bias.certainty_per_1000 }}</strong>
-        <span class="metric-desc"> words e.g. always, never </span>
+        <span class="metric-desc">Absolute words e.g. always, never per 1k</span>
     </div>
     <div class="metric">
         Bias
@@ -218,35 +218,31 @@ body {
         <span class="tag disagree">Models disagree</span>
     {% endif %}
     <span class="tag {% if result.divergence_level == 'High' %}div-high{% endif %}">
-    Model Difference: {{ result.divergence_level }}
+        Divergence: {{ result.divergence_level }}
     </span>
 </div>
 
 <div class="engine-toggle" onclick="toggleBreakdown(this)">&#9658; Engine breakdown</div>
 <div class="engine-breakdown">
     <div class="engine-box">
-        <strong>RoBERTa – 40%</strong>
-        {{ result.roberta_label }} · {{ result.roberta_percent }}% — Model that reads the article and understands the overall tone of the text.
+        <strong>RoBERTa &ndash; 40%</strong>
+        {{ result.roberta_label }} &middot; {{ result.roberta_percent }}% &mdash; context-aware transformer.
     </div>
-
     <div class="engine-box">
-        <strong>VADER – 25%</strong>
-        {{ result.vader_label }} · {{ result.vader_percent }}% — Looks at positive and negative words in the article to estimate sentiment.
+        <strong>VADER &ndash; 25%</strong>
+        {{ result.vader_label }} &middot; {{ result.vader_percent }}% &mdash; negation-aware scoring.
     </div>
-
     <div class="engine-box">
-        <strong>TextBlob – 15%</strong>
-        {{ result.textblob_label }} · {{ result.textblob_percent }}% — Uses a dictionary of words to check if the language is positive or negative.
+        <strong>TextBlob &ndash; 15%</strong>
+        {{ result.textblob_label }} &middot; {{ result.textblob_percent }}% &mdash; lexicon baseline (scaled 3&times;).
     </div>
-
     <div class="engine-box">
-        <strong>Gemini – 20%</strong>
-        {{ result.gemini_label }} · {{ result.gemini_percent }}% —  AI model that reads the article and judges the tone like a real person.
+        <strong>Gemini &ndash; 20%</strong>
+        {{ result.gemini_label }} &middot; {{ result.gemini_percent }}% &mdash; LLM-based scoring.
     </div>
-
     <div class="engine-box">
-        <strong>Model Difference</strong>
-        {{ result.divergence_level }} ({{ result.model_difference }}%) — Shows how much the AI models disagree about the article's tone.
+        <strong>Divergence</strong>
+        {{ result.divergence_level }} ({{ result.model_difference }}%) &mdash; spread between model scores.
     </div>
 </div>
 
@@ -259,6 +255,7 @@ body {
 
 <script>
 // Position spectrum bar markers from data-score attribute
+// This avoids Jinja2 inside style attributes which confuses VS Code's CSS linter
 document.querySelectorAll('.marker[data-score]').forEach(function(marker) {
     var score = parseFloat(marker.getAttribute('data-score'));
     var left = ((score + 100) / 200 * 100).toFixed(1);

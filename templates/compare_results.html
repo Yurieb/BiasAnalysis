@@ -1,0 +1,140 @@
+!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MediaLens — Comparison Results</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg:#f5f4f0; --surface:#ffffff; --border:#e1ded8;
+    --text:#1a1814; --muted:#7a756c; --accent:#2a5abf;
+    --positive:#1a7f52; --negative:#b83232; --neutral:#4a52a8;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); }
+.header { background:var(--surface); padding:18px 40px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+.logo { font-family:'DM Serif Display',serif; font-size:20px; }
+.logo span { color:var(--accent); }
+.nav a { color:var(--accent); text-decoration:none; font-size:14px; margin-left:20px; }
+ 
+/* Wider max-width to fit cards side by side */
+.main { max-width:1100px; margin:40px auto; padding:0 24px; }
+.hero h1 { font-family:'DM Serif Display',serif; font-size:34px; margin-bottom:10px; }
+.hero p { color:var(--muted); font-size:14px; margin-bottom:28px; }
+ 
+/* Grid — auto-fits 2,3,4,5 cards */
+.compare-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px; }
+ 
+/* All card styles identical to results.html */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:26px 28px; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
+.card-header { display:flex; justify-content:space-between; align-items:flex-start; }
+.category-pill { font-size:11px; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.card-title { font-weight:600; font-size:15px; margin-bottom:4px; line-height:1.35; }
+.card-title a { color:var(--text); text-decoration:none; }
+.card-title a:hover { color:var(--accent); }
+.card-source { font-size:12px; }
+.card-source a { color:var(--accent); text-decoration:none; }
+.score-number { font-size:30px; font-weight:600; }
+.score-number.positive { color:var(--positive); }
+.score-number.negative { color:var(--negative); }
+.score-number.neutral  { color:var(--neutral); }
+.score-block { text-align:right; }
+.score-label { font-size:11px; color:var(--muted); margin-top:2px; }
+.spectrum { margin:18px 0; }
+.bar { height:6px; background:linear-gradient(to right,#b83232,#ddd,#1a7f52); border-radius:4px; position:relative; }
+.marker { position:absolute; top:-4px; width:14px; height:14px; background:#000; border-radius:50%; transform:translateX(-50%); }
+.labels { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:6px; }
+.metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:20px 0 14px; }
+.metric { background:#f1efea; border:1px solid var(--border); border-radius:8px; padding:14px; font-size:13px; color:var(--muted); }
+.metric strong { display:block; font-size:18px; font-weight:600; color:var(--text); margin:4px 0; }
+.bias-rating { display:inline-block; margin-top:5px; font-size:11px; font-weight:600; padding:2px 8px; border-radius:99px; }
+.bias-rating.low      { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
+.bias-rating.moderate { background:#fffbeb; color:#b45309; border:1px solid #fde68a; }
+.bias-rating.high     { background:#fff1f2; color:#b91c1c; border:1px solid #fecdd3; }
+.card-footer { display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding-top:12px; margin-top:4px; border-top:1px solid var(--border); }
+.tag { background:#f1efea; border:1px solid var(--border); border-radius:6px; padding:4px 10px; font-size:11px; font-weight:500; color:var(--muted); }
+.tag.agree    { background:#f0fdf4; color:#15803d; border-color:#bbf7d0; }
+.tag.disagree { background:#fff1f2; color:#b91c1c; border-color:#fecdd3; }
+.tag.div-high { background:#fff7ed; color:#c2410c; border-color:#fed7aa; }
+ 
+.error-box { background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; padding:12px 16px; margin-bottom:20px; font-size:13px; color:#c2410c; }
+.back-link { display:inline-block; margin-bottom:24px; color:var(--accent); text-decoration:none; font-size:14px; font-weight:500; }
+</style>
+</head>
+<body>
+ 
+<header class="header">
+    <div class="logo">Media<span>Lens</span></div>
+    <div class="nav">
+        <a href="/">Home</a>
+        <a href="/compare">New Comparison</a>
+        <a href="/history">History</a>
+    </div>
+</header>
+ 
+<main class="main">
+ 
+    <a href="/compare" class="back-link">&larr; New comparison</a>
+ 
+    <div class="hero">
+        <h1>Comparison Results</h1>
+        <p>{{ results|length }} source{% if results|length != 1 %}s{% endif %} analysed on the same story.</p>
+    </div>
+ 
+    {% if errors %}
+    <div class="error-box">{% for e in errors %}<div>&#9888; {{ e }}</div>{% endfor %}</div>
+    {% endif %}
+ 
+    <div class="compare-grid">
+    {% for result in results %}
+    <div class="card">
+ 
+        <div class="card-header">
+            <div>
+                <div class="category-pill">{{ result.outlet_country }} &middot; {{ result.outlet_label }}</div>
+                <div class="card-title"><a href="{{ result.url }}" target="_blank">{{ result.title }}</a></div>
+                <div class="card-source"><a href="https://{{ result.source }}" target="_blank">{{ result.source }}</a></div>
+            </div>
+            <div class="score-block">
+                <div class="score-number {% if result.narrative_direction_score > 10 %}positive{% elif result.narrative_direction_score < -10 %}negative{% else %}neutral{% endif %}">
+                    {% if result.narrative_direction_score > 0 %}+{% endif %}{{ result.narrative_direction_score }}
+                </div>
+                <div class="score-label">{{ result.narrative_direction_label }}</div>
+            </div>
+        </div>
+ 
+        <div class="spectrum">
+            <div class="bar"><div class="marker" data-score="{{ result.narrative_direction_score }}"></div></div>
+            <div class="labels"><span>Critical</span><span>Balanced</span><span>Supportive</span></div>
+        </div>
+ 
+        <div class="metrics">
+            <div class="metric">Emotional<strong>{{ "%.1f"|format(result.bias.emotive_ratio * 100) }}%</strong></div>
+            <div class="metric">Exaggerated<strong>{{ result.bias.certainty_per_1000 }}</strong></div>
+            <div class="metric">Bias<strong>{{ result.bias.bias_intensity_score }}/100</strong><span class="bias-rating {{ result.bias.bias_level }}">{{ result.bias.bias_level|capitalize }}</span></div>
+        </div>
+ 
+        <div class="card-footer">
+            <span class="tag">RoBERTa {{ result.roberta_label }}</span>
+            <span class="tag">VADER {{ result.vader_label }}</span>
+            <span class="tag">TextBlob {{ result.textblob_label }}</span>
+            <span class="tag">Gemini {{ result.gemini_label }}</span>
+            {% if result.agreement %}<span class="tag agree">Models agree</span>
+            {% else %}<span class="tag disagree">Models disagree</span>{% endif %}
+            <span class="tag {% if result.divergence_level == 'High' %}div-high{% endif %}">Divergence: {{ result.divergence_level }}</span>
+        </div>
+ 
+    </div>
+    {% endfor %}
+    </div>
+ 
+</main>
+ 
+<script>
+document.querySelectorAll('.marker[data-score]').forEach(function(m) {
+    var s = parseFloat(m.getAttribute('data-score'));
+    m.style.left = ((s + 100) / 200 * 100).toFixed(1) + '%';
+});
+</script>
+</body>
+</html>
