@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -19,34 +19,35 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text)
 .main { max-width:680px; margin:40px auto; padding:0 20px; }
 .hero h1 { font-family:'DM Serif Display',serif; font-size:34px; margin-bottom:10px; }
 .hero p { color:var(--muted); font-size:14px; margin-bottom:28px; }
- 
 
 .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 24px; margin-bottom:14px; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
 .card-label { font-size:11px; text-transform:uppercase; color:var(--muted); margin-bottom:12px; font-weight:600; letter-spacing:0.08em; }
- 
+
 label { display:block; font-size:11px; font-weight:600; color:var(--muted); margin-bottom:5px; letter-spacing:0.06em; text-transform:uppercase; }
 input[type="url"], input[type="text"] { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:6px; font-size:14px; font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); margin-bottom:12px; }
 input:focus { outline:none; border-color:var(--accent); background:#fff; }
 input::placeholder { color:#b0aba3; }
 .two-col { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 .two-col input { margin-bottom:0; }
- 
 
-.submit-btn { background:var(--accent); color:white; border:none; padding:12px 20px; border-radius:6px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; width:100%; font-size:14px; }
-.add-btn { background:none; border:1px dashed var(--border); border-radius:6px; padding:11px; width:100%; font-size:13px; color:var(--muted); cursor:pointer; margin-bottom:14px; font-family:'DM Sans',sans-serif; }
-.add-btn:hover { border-color:var(--accent); color:var(--accent); }
- 
+.submit-btn { background:var(--accent); color:white; border:none; padding:12px 20px; border-radius:6px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; width:100%; font-size:14px; margin-top:4px; }
+
 .error { background:#fff1f2; border:1px solid #fecdd3; border-radius:8px; padding:12px 16px; margin-bottom:16px; font-size:13px; color:#b91c1c; }
 .hint { font-size:12px; color:var(--muted); margin-top:10px; text-align:center; }
- 
-.example { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 20px; margin-bottom:20px; font-size:13px; color:var(--muted); }
-.example strong { display:block; font-size:11px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
-.example span { color:var(--accent); font-weight:500; }
 
+/* Auto-detected badge shown next to filled fields */
+.auto-badge {
+    display:inline-block; font-size:10px; font-weight:600;
+    background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0;
+    border-radius:99px; padding:1px 7px; margin-left:6px;
+    vertical-align:middle; letter-spacing:0.04em;
+}
+.field-row { display:flex; align-items:center; margin-bottom:5px; }
+.field-row label { margin-bottom:0; }
 </style>
 </head>
 <body>
- 
+
 <header class="header">
     <div class="logo">Media<span>Lens</span></div>
     <div class="nav">
@@ -54,67 +55,215 @@ input::placeholder { color:#b0aba3; }
         <a href="/history">History</a>
     </div>
 </header>
- 
+
 <main class="main">
- 
+
     <div class="hero">
         <h1>Compare Sources</h1>
-        <p>Paste 2–5 articles on the same story from different outlets. MediaLens analyses each one and shows the scores side by side.</p>
+        <p>Paste 2–3 articles on the same story from different outlets. Outlet name and country fill in automatically.</p>
     </div>
- 
+
     {% if error %}<div class="error">{{ error }}</div>{% endif %}
- 
- 
+
     <form method="POST" action="/compare">
- 
+
         <div id="sources-container">
             <div class="card">
                 <div class="card-label">Source 1</div>
                 <label>Article URL</label>
-                <input type="url" name="urls" placeholder="https://..." required>
+                <input type="url" name="urls" required oninput="autoDetect(this)">
                 <div class="two-col">
-                    <div><label>Outlet Name</label><input type="text" name="labels" placeholder="e.g. BBC"></div>
-                    <div><label>Country</label><input type="text" name="countries" placeholder="e.g. UK"></div>
+                    <div>
+                        <div class="field-row">
+                            <label>Outlet Name</label>
+                            <span class="auto-badge" style="display:none">Auto</span>
+                        </div>
+                        <input type="text" name="labels">
+                    </div>
+                    <div>
+                        <div class="field-row">
+                            <label>Country</label>
+                            <span class="auto-badge" style="display:none">Auto</span>
+                        </div>
+                        <input type="text" name="countries">
+                    </div>
                 </div>
             </div>
- 
+
             <div class="card">
                 <div class="card-label">Source 2</div>
                 <label>Article URL</label>
-                <input type="url" name="urls" placeholder="https://..." required>
+                <input type="url" name="urls" required oninput="autoDetect(this)">
                 <div class="two-col">
-                    <div><label>Outlet Name</label><input type="text" name="labels" placeholder="e.g. Al Jazeera"></div>
-                    <div><label>Country</label><input type="text" name="countries" placeholder="e.g. Qatar"></div>
+                    <div>
+                        <div class="field-row">
+                            <label>Outlet Name</label>
+                            <span class="auto-badge" style="display:none">Auto</span>
+                        </div>
+                        <input type="text" name="labels">
+                    </div>
+                    <div>
+                        <div class="field-row">
+                            <label>Country</label>
+                            <span class="auto-badge" style="display:none">Auto</span>
+                        </div>
+                        <input type="text" name="countries">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-label">Source 3 <span style="font-size:10px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
+                <label>Article URL</label>
+                <input type="url" name="urls" oninput="autoDetect(this)">
+                <div class="two-col">
+                    <div>
+                        <div class="field-row">
+                            <label>Outlet Name</label>
+                            <span class="auto-badge" style="display:none">Auto</span>
+                        </div>
+                        <input type="text" name="labels">
+                    </div>
+                    <div>
+                        <div class="field-row">
+                            <label>Country</label>
+                            <span class="auto-badge" style="display:none">Auto</span>
+                        </div>
+                        <input type="text" name="countries">
+                    </div>
                 </div>
             </div>
         </div>
- 
-        <button type="button" class="add-btn" onclick="addSource()">+ Add another source (max 5)</button>
+
         <button type="submit" class="submit-btn">Compare Sources</button>
- 
+
     </form>
 </main>
- 
+
 <script>
-var count = 2;
-function addSource() {
-    if (count >= 5) { alert("Maximum 5 sources."); return; }
-    count++;
-    var c = document.getElementById("sources-container");
-    var d = document.createElement("div");
-    d.className = "card";
-    d.innerHTML = `
-        <div class="card-label">Source ${count}</div>
-        <label>Article URL</label>
-        <input type="url" name="urls" placeholder="https://...">
-        <div class="two-col">
-            <div><label>Outlet Name</label><input type="text" name="labels" placeholder="e.g. Reuters"></div>
-            <div><label>Country</label><input type="text" name="countries" placeholder="e.g. USA"></div>
-        </div>`;
-    c.appendChild(d);
+
+var OUTLETS = {
+    // USA
+    "foxnews.com":        { name: "Fox News",         country: "USA" },
+    "nbcnews.com":        { name: "NBC News",          country: "USA" },
+    "cnn.com":            { name: "CNN",               country: "USA" },
+    "nytimes.com":        { name: "New York Times",    country: "USA" },
+    "washingtonpost.com": { name: "Washington Post",   country: "USA" },
+    "wsj.com":            { name: "Wall Street Journal", country: "USA" },
+    "apnews.com":         { name: "AP News",           country: "USA" },
+    "reuters.com":        { name: "Reuters",           country: "USA" },
+    "usatoday.com":       { name: "USA Today",         country: "USA" },
+    "politico.com":       { name: "Politico",          country: "USA" },
+    "thehill.com":        { name: "The Hill",          country: "USA" },
+    "axios.com":          { name: "Axios",             country: "USA" },
+    "buzzfeednews.com":   { name: "BuzzFeed News",     country: "USA" },
+    "npr.org":            { name: "NPR",               country: "USA" },
+    "cbsnews.com":        { name: "CBS News",          country: "USA" },
+    "abcnews.go.com":     { name: "ABC News",          country: "USA" },
+    "msnbc.com":          { name: "MSNBC",             country: "USA" },
+    "nypost.com":         { name: "New York Post",     country: "USA" },
+    "breitbart.com":      { name: "Breitbart",         country: "USA" },
+    "huffpost.com":       { name: "HuffPost",          country: "USA" },
+    "theatlantic.com":    { name: "The Atlantic",      country: "USA" },
+    "vice.com":           { name: "VICE",              country: "USA" },
+    "vox.com":            { name: "Vox",               country: "USA" },
+    "slate.com":          { name: "Slate",             country: "USA" },
+
+    // UK
+    "bbc.com":            { name: "BBC",               country: "UK" },
+    "bbc.co.uk":          { name: "BBC",               country: "UK" },
+    "theguardian.com":    { name: "The Guardian",      country: "UK" },
+    "telegraph.co.uk":    { name: "The Telegraph",     country: "UK" },
+    "thetimes.co.uk":     { name: "The Times",         country: "UK" },
+    "independent.co.uk":  { name: "The Independent",   country: "UK" },
+    "dailymail.co.uk":    { name: "Daily Mail",        country: "UK" },
+    "mirror.co.uk":       { name: "The Mirror",        country: "UK" },
+    "thesun.co.uk":       { name: "The Sun",           country: "UK" },
+    "standard.co.uk":     { name: "Evening Standard",  country: "UK" },
+    "ft.com":             { name: "Financial Times",   country: "UK" },
+    "economist.com":      { name: "The Economist",     country: "UK" },
+    "spectator.co.uk":    { name: "The Spectator",     country: "UK" },
+    "sky.com":            { name: "Sky News",          country: "UK" },
+
+    // Qatar / Middle East
+    "aljazeera.com":      { name: "Al Jazeera",        country: "Qatar" },
+    "middleeasteye.net":  { name: "Middle East Eye",   country: "UK" },
+    "arabnews.com":       { name: "Arab News",         country: "Saudi Arabia" },
+    "timesofisrael.com":  { name: "Times of Israel",   country: "Israel" },
+    "haaretz.com":        { name: "Haaretz",           country: "Israel" },
+    "jpost.com":          { name: "Jerusalem Post",    country: "Israel" },
+    "presstv.ir":         { name: "Press TV",          country: "Iran" },
+    "tehrantimes.com":    { name: "Tehran Times",      country: "Iran" },
+
+    // Russia / Europe East
+    "rt.com":             { name: "RT",                country: "Russia" },
+    "sputniknews.com":    { name: "Sputnik",           country: "Russia" },
+    "tass.com":           { name: "TASS",              country: "Russia" },
+    "kyivindependent.com":{ name: "Kyiv Independent",  country: "Ukraine" },
+
+    // Europe
+    "dw.com":             { name: "Deutsche Welle",    country: "Germany" },
+    "spiegel.de":         { name: "Der Spiegel",       country: "Germany" },
+    "lemonde.fr":         { name: "Le Monde",          country: "France" },
+    "lefigaro.fr":        { name: "Le Figaro",         country: "France" },
+    "france24.com":       { name: "France 24",         country: "France" },
+    "euronews.com":       { name: "Euronews",          country: "Europe" },
+    "politico.eu":        { name: "Politico Europe",   country: "Europe" },
+    "irishtimes.com":     { name: "Irish Times",       country: "Ireland" },
+    "rte.ie":             { name: "RTÉ",               country: "Ireland" },
+    "thejournal.ie":      { name: "The Journal",       country: "Ireland" },
+    "independent.ie":     { name: "Irish Independent", country: "Ireland" },
+
+    // Asia / Pacific
+    "scmp.com":           { name: "South China Morning Post", country: "Hong Kong" },
+    "xinhuanet.com":      { name: "Xinhua",            country: "China" },
+    "globaltimes.cn":     { name: "Global Times",      country: "China" },
+    "straitstimes.com":   { name: "Straits Times",     country: "Singapore" },
+    "japantimes.co.jp":   { name: "Japan Times",       country: "Japan" },
+    "thehindu.com":       { name: "The Hindu",         country: "India" },
+    "ndtv.com":           { name: "NDTV",              country: "India" },
+    "dawn.com":           { name: "Dawn",              country: "Pakistan" },
+
+    // Canada / Australia
+    "cbc.ca":             { name: "CBC",               country: "Canada" },
+    "globalnews.ca":      { name: "Global News",       country: "Canada" },
+    "abc.net.au":         { name: "ABC Australia",     country: "Australia" },
+    "theguardian.com/au": { name: "Guardian Australia",country: "Australia" },
+    "smh.com.au":         { name: "Sydney Morning Herald", country: "Australia" },
+};
+
+// ─────────────────────────────────────────────
+// Auto-detect logic
+// ─────────────────────────────────────────────
+function autoDetect(urlInput) {
+    var card = urlInput.closest(".card");
+    var labelInput   = card.querySelectorAll("input[name='labels']")[0];
+    var countryInput = card.querySelectorAll("input[name='countries']")[0];
+    var badges       = card.querySelectorAll(".auto-badge");
+
+    var url = urlInput.value.trim();
+    if (!url) return;
+
+    // Extract hostname, strip www.
+    var match = url.match(/^https?:\/\/(?:www\.)?([^\/]+)/i);
+    if (!match) return;
+    var host = match[1].toLowerCase();
+
+    // Try exact match first, then strip subdomains one level at a time
+    var info = null;
+    var parts = host.split(".");
+    for (var i = 0; i < parts.length - 1; i++) {
+        var attempt = parts.slice(i).join(".");
+        if (OUTLETS[attempt]) { info = OUTLETS[attempt]; break; }
+    }
+
+    if (info) {
+        // Only fill if user hasn't already typed something
+        if (!labelInput.value)   { labelInput.value   = info.name;    badges[0].style.display = "inline-block"; }
+        if (!countryInput.value) { countryInput.value = info.country; badges[1].style.display = "inline-block"; }
+    }
 }
 
 </script>
 </body>
 </html>
- 

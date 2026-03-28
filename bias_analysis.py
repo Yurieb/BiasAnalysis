@@ -1,7 +1,6 @@
 import re
 
 # Words used to evoke strong emotion in headlines
-# Expanded from ~40 to ~150 words for better coverage across news topics
 EMOTIVE_WORDS = {
     # Strong negative emotion
     "shocking", "outrage", "outraged", "crisis", "disaster",
@@ -42,7 +41,7 @@ EMOTIVE_WORDS = {
     "extremist", "radical", "fanatic", "militant", "insurgent",
     "coup", "tyranny", "tyrannical", "authoritarian", "dictator",
 
-    # Positive hype language (also emotive — just positive direction)
+    # Positive hype language 
     "triumphant", "glorious", "heroic", "magnificent", "spectacular",
     "phenomenal", "extraordinary", "outstanding", "brilliant", "genius",
     "revolutionary", "visionary", "historic", "legendary", "iconic"
