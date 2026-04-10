@@ -21,7 +21,7 @@ vader = SentimentIntensityAnalyzer()
 _gemini_key = os.getenv("GEMINI_API_KEY", "")
 if _gemini_key:
     genai.configure(api_key=_gemini_key)
-    _gemini_model = genai.GenerativeModel("gemini-1.5-flash")
+    _gemini_model = genai.GenerativeModel("gemini-2.5-flash")
 else:
     _gemini_model = None
 
@@ -122,25 +122,32 @@ def normalize_to_percent(score_minus1_to_1):
 # Gemini (LLM-based 4th engine)
 # ----------------------------------------
 def get_gemini_sentiment(text: str):
-    """
-    Asks Gemini to rate sentiment from -1.0 to +1.0.
-    Falls back to neutral (0.0) if API key is missing or call fails.
-    """
     if not text or not _gemini_model:
         return "neutral", 0.0
 
     prompt = (
         "Rate the sentiment of this news article on a scale from -1.0 to +1.0.\n"
-        "-1.0 = strongly negative/critical, 0.0 = neutral, +1.0 = strongly positive/supportive.\n"
-        "Reply with ONLY a single number, nothing else.\n\n"
-        f"Article: {text[:1500]}"
+        "ONLY return a number like 0.2 or -0.5. No words.\n\n"
+        f"{text[:1500]}"
     )
 
     try:
         response = _gemini_model.generate_content(prompt)
-        score = float(response.text.strip())
-        score = round(max(min(score, 1.0), -1.0), 3)  # clamp to [-1, +1]
-    except Exception:
+        raw = response.text.strip()
+
+        print("Gemini raw:", raw)  # DEBUG
+
+        # Extract number safely
+        match = re.search(r"-?\d+(\.\d+)?", raw)
+        if match:
+            score = float(match.group())
+        else:
+            return "neutral", 0.0
+
+        score = round(max(min(score, 1.0), -1.0), 3)
+
+    except Exception as e:
+        print("Gemini error:", e)
         return "neutral", 0.0
 
     if score > 0.05:

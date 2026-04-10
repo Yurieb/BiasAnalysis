@@ -95,7 +95,17 @@ body {
     background:#f1efea; border:1px solid var(--border);
     border-radius:8px; padding:14px; font-size:13px; color:var(--muted);
 }
-.metric strong { display:block; font-size:18px; font-weight:600; color:var(--text); margin:4px 0 4px; }
+.metric-title { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-bottom:8px; }
+.metric-pill { display:inline-block; font-size:12px; font-weight:600; padding:3px 10px; border-radius:99px; margin-bottom:10px; }
+.metric-pill.low      { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
+.metric-pill.moderate { background:#fffbeb; color:#b45309; border:1px solid #fde68a; }
+.metric-pill.high     { background:#fff1f2; color:#b91c1c; border:1px solid #fecdd3; }
+.metric-bar-wrap { background:var(--border); border-radius:4px; height:5px; margin-bottom:8px; }
+.metric-bar-fill { height:5px; border-radius:4px; }
+.metric-bar-fill.low      { background:#1a7f52; }
+.metric-bar-fill.moderate { background:#b45309; }
+.metric-bar-fill.high     { background:#b91c1c; }
+.metric-raw { font-size:11px; color:var(--muted); }
 .metric-desc { font-size:11px; color:var(--muted); line-height:1.4; }
 
 .bias-rating {
@@ -190,21 +200,42 @@ body {
 </div>
 
 <div class="metrics">
+
+    {% set emotive_pct = result.bias.emotive_ratio * 100 %}
+    {% if emotive_pct < 2 %}{% set em_level = "low" %}{% set em_bar = (emotive_pct / 2 * 33)|int %}
+    {% elif emotive_pct < 5 %}{% set em_level = "moderate" %}{% set em_bar = (33 + (emotive_pct - 2) / 3 * 33)|int %}
+    {% else %}{% set em_level = "high" %}{% set em_bar = [66 + ((emotive_pct - 5) / 5 * 34)|int, 100]|min %}{% endif %}
+
     <div class="metric">
-        Emotional
-        <strong>{{ "%.1f" | format(result.bias.emotive_ratio * 100) }}%</strong>
-        <span class="metric-desc">Charged words e.g. crisis, outrage</span>
+        <div class="metric-title">Emotional language</div>
+        <span class="metric-pill {{ em_level }}">{{ em_level | capitalize }}</span>
+        <div class="metric-bar-wrap"><div class="metric-bar-fill {{ em_level }}" style="width:{{ em_bar }}%"></div></div>
+        <div class="metric-raw">{{ "%.1f" | format(emotive_pct) }}% of words are emotionally charged</div>
     </div>
+
+    {% set cert = result.bias.certainty_per_1000 %}
+    {% if cert < 5 %}{% set cert_level = "low" %}{% set cert_bar = (cert / 5 * 33)|int %}
+    {% elif cert < 15 %}{% set cert_level = "moderate" %}{% set cert_bar = (33 + (cert - 5) / 10 * 33)|int %}
+    {% else %}{% set cert_level = "high" %}{% set cert_bar = [66 + ((cert - 15) / 10 * 34)|int, 100]|min %}{% endif %}
+
     <div class="metric">
-        Exaggerated
-        <strong>{{ result.bias.certainty_per_1000 }}</strong>
-        <span class="metric-desc">Absolute words e.g. always, never per 1k</span>
+        <div class="metric-title">Absolute language</div>
+        <span class="metric-pill {{ cert_level }}">{{ cert_level | capitalize }}</span>
+        <div class="metric-bar-wrap"><div class="metric-bar-fill {{ cert_level }}" style="width:{{ cert_bar }}%"></div></div>
+        <div class="metric-raw">{{ cert }} words like "always" or "never" per 1,000</div>
     </div>
+
     <div class="metric">
-        Bias
-        <strong>{{ result.bias.bias_intensity_score }}/100</strong>
-        <span class="bias-rating {{ result.bias.bias_level }}">{{ result.bias.bias_level | capitalize }}</span>
+        <div class="metric-title">Overall bias</div>
+        <span class="metric-pill {{ result.bias.bias_level }}">{{ result.bias.bias_level | capitalize }}</span>
+        <div class="metric-bar-wrap"><div class="metric-bar-fill {{ result.bias.bias_level }}" style="width: {{ result.bias.bias_intensity_score }}%"></div></div>
+        <div class="metric-raw">{{ result.bias.bias_intensity_score }} / 100 combined score</div>
     </div>
+
+</div>
+
+<div style="font-size:12px; color:var(--muted); margin-bottom:14px;">
+    Article length: <strong style="color:var(--text)">{{ result.bias.total_words }} words</strong>
 </div>
 
 <div class="card-footer">

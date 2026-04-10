@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, Response
 from newspaper import Article as NewsArticle
 import trafilatura
 from ml_sentiment import run_sentiment_pipeline
@@ -7,6 +7,8 @@ from urllib.parse import urlparse
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import re
+import csv
+import io
 
 app = Flask(__name__)
 
@@ -50,6 +52,7 @@ def detect_category(title: str, text: str) -> str:
     best = max(scores, key=scores.get)
     return best if scores[best] >= 1 else "General"
 
+
 # Confidence helper
 def confidence_level(score: float) -> str:
     if score >= 0.75:
@@ -58,6 +61,7 @@ def confidence_level(score: float) -> str:
         return "medium"
     else:
         return "low"
+
 
 # Database models
 class Article(db.Model):
@@ -68,6 +72,7 @@ class Article(db.Model):
     text = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+
 class AnalysisResult(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     article_id = db.Column(db.Integer, db.ForeignKey("article.id"), nullable=False)
@@ -76,6 +81,7 @@ class AnalysisResult(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     article = db.relationship("Article", backref=db.backref("analyses", lazy=True))
+
 
 # Analyse single URL
 def analyze_single_url(url):
@@ -86,6 +92,7 @@ def analyze_single_url(url):
     title = a.title or ""
     text  = a.text  or ""
 
+    # If newspaper3k got too little text (paywalled / JS-heavy site)
     # fall back to trafilatura which handles more site types
     if len(text.split()) < 50:
         downloaded = trafilatura.fetch_url(url)
@@ -253,7 +260,7 @@ def history():
 
 
 # ----------------------------------------
-# Source Comparison 
+# Source Comparison — Part 2
 # ----------------------------------------
 def calculate_comparison(results):
     scores = [r["narrative_direction_score"] for r in results]
@@ -329,6 +336,68 @@ def compare():
         )
 
     return render_template("compare_form.html", error=None)
+
+
+@app.route("/export-csv", methods=["POST"])
+def export_csv():
+    """
+    Accepts a list of URLs + labels + countries via POST,
+    re-analyses them and returns a downloadable CSV file.
+    Used by the Download CSV button on the compare results page.
+    """
+    urls      = request.form.getlist("urls")
+    labels    = request.form.getlist("labels")
+    countries = request.form.getlist("countries")
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    writer.writerow([
+        "Outlet", "Country", "Title", "Source", "URL",
+        "Narrative Score", "Narrative Label",
+        "RoBERTa", "VADER", "TextBlob", "Gemini",
+        "Model Agreement", "Divergence Level", "Divergence %",
+        "Bias Level", "Bias Score",
+        "Emotional %", "Certainty per 1k", "Article Words"
+    ])
+
+    for url, label, country in zip(urls, labels, countries):
+        url = url.strip()
+        if not url:
+            continue
+        try:
+            r = analyze_single_url(url)
+            writer.writerow([
+                label or r["source"],
+                country or "Unknown",
+                r["title"],
+                r["source"],
+                url,
+                r["narrative_direction_score"],
+                r["narrative_direction_label"],
+                r["roberta_label"],
+                r["vader_label"],
+                r["textblob_label"],
+                r["gemini_label"],
+                "Yes" if r["agreement"] else "No",
+                r["divergence_level"],
+                r["model_difference"],
+                r["bias"]["bias_level"],
+                r["bias"]["bias_intensity_score"],
+                round(r["bias"]["emotive_ratio"] * 100, 1),
+                r["bias"]["certainty_per_1000"],
+                r["bias"]["total_words"],
+            ])
+        except Exception:
+            continue
+
+    output.seek(0)
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment; filename=medialens_comparison.csv"}
+    )
+
 
 if __name__ == "__main__":
     with app.app_context():
