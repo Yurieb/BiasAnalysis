@@ -82,6 +82,33 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text)
 .badge.most-biased   { background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; }
  
 .error-box { background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; padding:12px 16px; margin-bottom:20px; font-size:13px; color:#c2410c; }
+
+.feedback-row { display:flex; align-items:center; gap:8px; margin-top:14px; padding-top:12px; border-top:1px solid var(--border); font-size:12px; color:var(--muted); flex-wrap:wrap; }
+.feedback-btn { background:#f1efea; border:1px solid var(--border); border-radius:6px; padding:3px 10px; font-size:11px; font-weight:500; cursor:pointer; font-family:'DM Sans',sans-serif; color:var(--muted); }
+.feedback-btn.up:hover   { background:#f0fdf4; color:#15803d; border-color:#bbf7d0; }
+.feedback-btn.down:hover { background:#fff1f2; color:#b91c1c; border-color:#fecdd3; }
+.feedback-thanks { font-size:11px; color:var(--muted); font-style:italic; }
+
+.lean-pill { display:inline-block; font-size:10px; font-weight:600; padding:1px 7px; border-radius:99px; margin-left:4px; }
+.lean-pill.left   { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
+.lean-pill.center { background:#f1efea; color:#7a756c; border:1px solid var(--border); }
+.lean-pill.right  { background:#fef2f2; color:#b91c1c; border:1px solid #fecdd3; }
+.lean-pill.none   { display:none; }
+
+/* Outlet political lean spectrum */
+.lean-spectrum { margin:12px 0 0; }
+.lean-bar { height:6px; background:linear-gradient(to right,#1d4ed8 0%,#3b82f6 16%,#93c5fd 33%,#d1d5db 50%,#fca5a5 67%,#ef4444 84%,#991b1b 100%); border-radius:4px; position:relative; }
+.lean-marker { position:absolute; top:-4px; width:13px; height:13px; background:#111; border-radius:50%; transform:translateX(-50%); border:2px solid #fff; }
+.lean-bar-labels { display:flex; justify-content:space-between; font-size:10px; color:var(--muted); margin-top:4px; }
+.lean-badge { display:inline-block; margin-top:5px; font-size:10px; font-weight:600; padding:2px 8px; border-radius:99px; }
+.lean-badge.far-left    { background:#dbeafe; color:#1e3a8a; border:1px solid #93c5fd; }
+.lean-badge.left        { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
+.lean-badge.center-left { background:#e0f2fe; color:#0369a1; border:1px solid #7dd3fc; }
+.lean-badge.center      { background:#f1efea; color:#7a756c; border:1px solid var(--border); }
+.lean-badge.center-right{ background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; }
+.lean-badge.right       { background:#fef2f2; color:#b91c1c; border:1px solid #fecdd3; }
+.lean-badge.far-right   { background:#ffe4e6; color:#881337; border:1px solid #fda4af; }
+.factuality-badge { display:inline-block; margin-left:5px; font-size:10px; font-weight:500; padding:2px 7px; border-radius:99px; background:#f1efea; color:var(--muted); border:1px solid var(--border); }
 </style>
 </head>
 <body>
@@ -92,6 +119,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text)
         <a href="/">Home</a>
         <a href="/compare">New Comparison</a>
         <a href="/history">History</a>
+        <a href="/stats">Stats</a>
     </div>
 </header>
  
@@ -200,7 +228,21 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text)
             <div class="bar"><div class="marker" data-score="{{ result.narrative_direction_score }}"></div></div>
             <div class="bar-labels"><span>Critical</span><span>Balanced</span><span>Supportive</span></div>
         </div>
- 
+
+        {% if result.outlet_known %}
+        <div class="lean-spectrum">
+            <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:5px;">Source Political Lean</div>
+            <div class="lean-bar">
+                <div class="lean-marker" data-lean-pos="{{ result.outlet_lean_position }}"></div>
+            </div>
+            <div class="lean-bar-labels"><span>Far Left</span><span>Center</span><span>Far Right</span></div>
+            <div style="margin-top:4px;">
+                <span class="lean-badge {{ result.outlet_lean }}">{{ result.outlet_lean_label }}</span>
+                <span class="factuality-badge">Factuality: {{ result.outlet_factuality_label }}</span>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Bias level + word count -->
         <div class="bias-row">
             <div class="bias-label">Language Bias</div>
@@ -216,7 +258,14 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text)
             <div class="tech-row"><span>RoBERTa</span><span>{{ result.roberta_label }} ({{ result.roberta_percent }}%)</span></div>
             <div class="tech-row"><span>VADER</span><span>{{ result.vader_label }} ({{ result.vader_percent }}%)</span></div>
             <div class="tech-row"><span>TextBlob</span><span>{{ result.textblob_label }} ({{ result.textblob_percent }}%)</span></div>
-            <div class="tech-row"><span>Gemini</span><span>{{ result.gemini_label }} ({{ result.gemini_percent }}%)</span></div>
+            <div class="tech-row">
+                <span>Gemini</span>
+                <span>{{ result.gemini_label }} ({{ result.gemini_percent }}%)
+                    {% if result.gemini_lean and result.gemini_lean != 'none' %}
+                        <span class="lean-pill {{ result.gemini_lean }}">{{ result.gemini_lean | capitalize }}</span>
+                    {% endif %}
+                </span>
+            </div>
             <div class="tech-row"><span>Model agreement</span><span>{% if result.agreement %}Yes{% else %}No{% endif %}</span></div>
             <div class="tech-row"><span>Divergence</span><span>{{ result.divergence_level }} ({{ result.model_difference }}%)</span></div>
             <div class="tech-row">
@@ -233,7 +282,20 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text)
             </div>
             <div class="tech-row"><span>Article length</span><span>{{ result.bias.total_words }} words</span></div>
         </div>
- 
+
+        <!-- Phase 3: feedback row -->
+        <div class="feedback-row" data-article-id="{{ result.article_id }}">
+            <span>Accurate?</span>
+            <button class="feedback-btn up"   data-rating="1">&#10003; Yes</button>
+            <button class="feedback-btn down" data-rating="-1">&#10007; No</button>
+            <select class="feedback-btn feedback-lean" style="padding:3px 6px;">
+                <option value="none">Your lean</option>
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+                <option value="right">Right</option>
+            </select>
+        </div>
+
     </div>
     {% endfor %}
     </div>
@@ -245,6 +307,10 @@ document.querySelectorAll('.marker[data-score]').forEach(function(m) {
     var s = parseFloat(m.getAttribute('data-score'));
     m.style.left = ((s + 100) / 200 * 100).toFixed(1) + '%';
 });
+
+document.querySelectorAll('.lean-marker[data-lean-pos]').forEach(function(m) {
+    m.style.left = m.getAttribute('data-lean-pos') + '%';
+});
  
 function toggleTech(el) {
     var details = el.nextElementSibling;
@@ -252,6 +318,30 @@ function toggleTech(el) {
     details.style.display = open ? 'none' : 'block';
     el.innerHTML = (open ? '&#9658;' : '&#9660;') + ' Technical details';
 }
+
+// Phase 3: feedback buttons
+document.querySelectorAll('.feedback-row').forEach(function(row) {
+    var articleId = row.getAttribute('data-article-id');
+    row.querySelectorAll('.feedback-btn[data-rating]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var rating  = btn.getAttribute('data-rating');
+            var leanSel = row.querySelector('.feedback-lean');
+            var lean    = leanSel ? leanSel.value : 'none';
+            var body    = 'article_id=' + encodeURIComponent(articleId)
+                        + '&rating='    + encodeURIComponent(rating)
+                        + '&lean='      + encodeURIComponent(lean);
+            fetch('/feedback', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: body
+            }).then(function(r) {
+                if (r.ok) {
+                    row.innerHTML = '<span class="feedback-thanks">Thanks \u2014 feedback recorded.</span>';
+                }
+            });
+        });
+    });
+});
  
 function downloadCSV() {
     var rows = [

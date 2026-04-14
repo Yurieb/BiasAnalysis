@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MediaLens &mdash; Engine Stats</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg:#f5f4f0; --surface:#ffffff; --border:#e1ded8;
+    --text:#1a1814; --muted:#7a756c; --accent:#2a5abf;
+    --positive:#1a7f52; --negative:#b83232; --neutral:#4a52a8;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:'DM Sans', sans-serif; background:var(--bg); color:var(--text); }
+
+.header {
+    background:var(--surface); padding:18px 40px;
+    border-bottom:1px solid var(--border);
+    display:flex; justify-content:space-between; align-items:center;
+}
+.logo { font-family:'DM Serif Display', serif; font-size:20px; }
+.logo span { color:var(--accent); }
+.nav a { color:var(--accent); text-decoration:none; font-size:14px; margin-left:20px; }
+
+.main { max-width:900px; margin:40px auto; padding:0 24px; }
+.page-title { font-family:'DM Serif Display', serif; font-size:30px; margin-bottom:6px; }
+.page-sub   { color:var(--muted); font-size:14px; margin-bottom:32px; }
+
+/* Stat grid at the top */
+.kpi-grid {
+    display:grid; grid-template-columns:repeat(3, 1fr);
+    gap:16px; margin-bottom:32px;
+}
+.kpi {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:12px; padding:22px 24px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.05);
+}
+.kpi-label { font-size:11px; font-weight:600; text-transform:uppercase;
+             letter-spacing:0.08em; color:var(--muted); margin-bottom:8px; }
+.kpi-value { font-size:34px; font-weight:600; line-height:1; color:var(--text); }
+.kpi-value.positive { color:var(--positive); }
+.kpi-value.negative { color:var(--negative); }
+.kpi-value.accent   { color:var(--accent); }
+.kpi-sub   { font-size:12px; color:var(--muted); margin-top:6px; }
+
+/* Section cards */
+.section {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:12px; padding:24px 28px; margin-bottom:24px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.05);
+}
+.section-title {
+    font-family:'DM Serif Display', serif; font-size:18px;
+    margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--border);
+}
+
+/* Accuracy meter */
+.accuracy-bar-wrap { background:var(--border); border-radius:6px; height:10px; margin:10px 0 6px; }
+.accuracy-bar-fill { height:10px; border-radius:6px; background:var(--positive); transition:width 0.4s; }
+.accuracy-label { font-size:13px; color:var(--muted); }
+
+/* Table */
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th { text-align:left; font-size:11px; font-weight:600; text-transform:uppercase;
+     letter-spacing:0.06em; color:var(--muted); padding:0 0 10px; }
+td { padding:8px 0; border-bottom:1px solid var(--border); }
+tr:last-child td { border-bottom:none; }
+td:last-child { text-align:right; font-weight:600; color:var(--text); }
+
+/* Lean pills */
+.lean-row { display:flex; gap:10px; flex-wrap:wrap; margin-top:6px; }
+.lean-pill { display:inline-flex; align-items:center; gap:6px;
+             font-size:12px; font-weight:600; padding:4px 12px;
+             border-radius:99px; }
+.lean-pill.left   { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
+.lean-pill.center { background:#f1efea; color:#7a756c; border:1px solid var(--border); }
+.lean-pill.right  { background:#fef2f2; color:#b91c1c; border:1px solid #fecdd3; }
+.lean-pill.none   { background:#f1efea; color:#7a756c; border:1px solid var(--border); }
+
+/* Bar chart rows */
+.bar-row { margin:10px 0; }
+.bar-row-label { display:flex; justify-content:space-between;
+                 font-size:13px; margin-bottom:4px; }
+.bar-row-label span:last-child { font-weight:600; }
+.bar-bg { background:var(--border); border-radius:4px; height:7px; }
+.bar-fill { height:7px; border-radius:4px; background:var(--accent); }
+
+.empty { color:var(--muted); font-size:13px; font-style:italic; }
+</style>
+</head>
+<body>
+
+<header class="header">
+    <div class="logo">Media<span>Lens</span></div>
+    <div class="nav">
+        <a href="/">Home</a>
+        <a href="/compare">Compare</a>
+        <a href="/history">History</a>
+        <a href="/stats">Stats</a>
+    </div>
+</header>
+
+<main class="main">
+
+    <div class="page-title">Engine Statistics</div>
+    <div class="page-sub">Live accuracy ratings, correction feedback, and analysis breakdown.</div>
+
+    <!-- KPI row -->
+    <div class="kpi-grid">
+        <div class="kpi">
+            <div class="kpi-label">Total Analyses</div>
+            <div class="kpi-value accent">{{ total_analyses }}</div>
+            <div class="kpi-sub">articles processed</div>
+        </div>
+        <div class="kpi">
+            <div class="kpi-label">Feedback Received</div>
+            <div class="kpi-value">{{ total_feedback }}</div>
+            <div class="kpi-sub">user corrections submitted</div>
+        </div>
+        <div class="kpi">
+            <div class="kpi-label">Avg. Model Divergence</div>
+            <div class="kpi-value {% if avg_divergence > 25 %}negative{% elif avg_divergence > 10 %}neutral{% else %}positive{% endif %}">
+                {{ avg_divergence }}%
+            </div>
+            <div class="kpi-sub">spread between engine scores</div>
+        </div>
+    </div>
+
+    <!-- Correction accuracy -->
+    <div class="section">
+        <div class="section-title">Correction Rating</div>
+
+        {% if total_feedback == 0 %}
+            <p class="empty">No feedback yet. Rate an analysis on the results page to see accuracy stats here.</p>
+        {% else %}
+            <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
+                Based on <strong style="color:var(--text)">{{ total_feedback }}</strong>
+                user ratings &mdash;
+                <strong style="color:var(--positive)">{{ positive_count }}</strong> accurate &nbsp;/&nbsp;
+                <strong style="color:var(--negative)">{{ negative_count }}</strong> inaccurate
+            </p>
+
+            <div class="accuracy-bar-wrap">
+                <div class="accuracy-bar-fill" style="width:{{ accuracy_pct or 0 }}%"></div>
+            </div>
+            <div class="accuracy-label">
+                <strong style="font-size:20px;color:var(--text)">{{ accuracy_pct }}%</strong>
+                of analyses rated as accurate by users
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- User lean breakdown -->
+    <div class="section">
+        <div class="section-title">User-Reported Political Lean</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">
+            When users mark an analysis as inaccurate, they can submit their own lean assessment.
+        </p>
+
+        {% if total_feedback == 0 %}
+            <p class="empty">No lean data yet.</p>
+        {% else %}
+            {% set max_lean = [lean_counts.left, lean_counts.center, lean_counts.right, lean_counts.none, 1] | max %}
+            {% for lean_name, lean_label in [('left','Left'),('center','Center'),('right','Right'),('none','No lean')] %}
+            {% set count = lean_counts[lean_name] %}
+            <div class="bar-row">
+                <div class="bar-row-label">
+                    <span>{{ lean_label }}</span>
+                    <span>{{ count }}</span>
+                </div>
+                <div class="bar-bg">
+                    <div class="bar-fill" style="width:{{ (count / max_lean * 100) | int }}%"></div>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Category breakdown -->
+    <div class="section">
+        <div class="section-title">Analyses by Category</div>
+        {% if not category_counts %}
+            <p class="empty">No category data yet.</p>
+        {% else %}
+            {% set max_cat = category_counts[0][1] if category_counts else 1 %}
+            {% for cat, cnt in category_counts %}
+            <div class="bar-row">
+                <div class="bar-row-label">
+                    <span>{{ cat }}</span>
+                    <span>{{ cnt }}</span>
+                </div>
+                <div class="bar-bg">
+                    <div class="bar-fill" style="width:{{ (cnt / max_cat * 100) | int }}%"></div>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Top sources -->
+    <div class="section">
+        <div class="section-title">Most Analysed Sources</div>
+        {% if not top_sources %}
+            <p class="empty">No source data yet.</p>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Source</th>
+                        <th style="text-align:right">Analyses</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for source, cnt in top_sources %}
+                    <tr>
+                        <td>{{ source }}</td>
+                        <td>{{ cnt }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+
+</main>
+</body>
+</html>
