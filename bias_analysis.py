@@ -97,7 +97,13 @@ def analyse_bias_language(text: str):
             "total_words": 0,
         }
 
-    emotive_count = sum(1 for w in words if w in EMOTIVE_WORDS)
+    emotive_count = 0
+    emotive_word_freq = {}
+    for w in words:
+        if w in EMOTIVE_WORDS:
+            emotive_count += 1
+            emotive_word_freq[w] = emotive_word_freq.get(w, 0) + 1
+
     certainty_count = sum(1 for w in words if w in CERTAINTY_WORDS)
 
     emotive_ratio = emotive_count / total_words
@@ -127,6 +133,7 @@ def analyse_bias_language(text: str):
         "bias_intensity_score": bias_intensity_score,
         "bias_level": bias_level,
         "total_words": total_words,
+        "emotive_words": emotive_word_freq,
     }
 
 def compute_bias_intensity(emotive_ratio, certainty_per_1000):

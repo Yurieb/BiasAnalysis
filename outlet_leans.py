@@ -182,7 +182,7 @@ def get_outlet_info(domain: str) -> dict:
     """
     domain = domain.lower().strip()
 
-    for prefix in ("www.", "news.", "m.", "mobile.", "amp."):
+    for prefix in ("www.", "news.", "m.", "mobile.", "amp.", "edition."):
         if domain.startswith(prefix):
             domain = domain[len(prefix):]
             break

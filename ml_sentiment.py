@@ -11,9 +11,11 @@ load_dotenv()
 
 
 # Load Transformer model one time at startup
+# Upgraded from twitter-roberta-base (tweet-trained, too neutral on news)
+# to siebert/sentiment-roberta-large-english (trained on 15 datasets incl. news)
 sentiment_pipeline = pipeline(
     "sentiment-analysis",
-    model="cardiffnlp/twitter-roberta-base-sentiment"
+    model="siebert/sentiment-roberta-large-english"
 )
 
 vader = SentimentIntensityAnalyzer()
@@ -32,7 +34,7 @@ else:
 # 512 chars. RoBERTa is run on up to MAX_CHUNKS chunks,
 # then results are combined via majority vote.
 # -------------------------------------------------------
-_CHUNK_CHARS = 2000   # ~300-400 words per chunk
+_CHUNK_CHARS = 2000 
 _MAX_CHUNKS  = 3
 
 
@@ -54,7 +56,9 @@ def _split_chunks(text: str) -> list:
 # ----------------------------------------
 def get_ml_sentiment(text: str):
     """
-    Analyse sentiment using RoBERTa across multiple chunks.
+    Analyse sentiment using RoBERTa large across multiple chunks.
+    siebert/sentiment-roberta-large-english returns POSITIVE/NEGATIVE only.
+    Neutral is inferred when confidence is below 0.65 (model is uncertain).
     Returns: (label, avg_confidence 0-1)
     """
     if not text or len(text.strip()) < 3:
@@ -66,16 +70,16 @@ def get_ml_sentiment(text: str):
 
     for chunk in chunks:
         try:
-            # RoBERTa's hard token limit is 512; slice characters here
-            # (roughly 3-4 chars per token for English, so 512 chars < 512 tokens)
-            result     = sentiment_pipeline(chunk[:512])[0]
+            result     = sentiment_pipeline(chunk, truncation=True, max_length=512)[0]
             raw_label  = result.get("label", "").lower()
             confidence = round(result.get("score", 0.0), 3)
 
             if "positive" in raw_label:
-                label = "positive"
+                # Low confidence positive = treat as neutral
+                label = "positive" if confidence >= 0.65 else "neutral"
             elif "negative" in raw_label:
-                label = "negative"
+                # Low confidence negative = treat as neutral
+                label = "negative" if confidence >= 0.65 else "neutral"
             else:
                 label = "neutral"
 
@@ -293,8 +297,8 @@ def run_sentiment_pipeline(text: str):
     else:
         divergence_level = "High"
 
-    # Phase 2: confidence gate — when models are far apart the hybrid
-    # average becomes noise, so flag it explicitly instead of blending.
+    #confidence gate — when models are far apart the hybrid
+    # average becomes nois so flag it explicitly instead of blending.
     if model_difference > 40:
         narrative_label = "Uncertain \u2014 Models Disagree"
 

@@ -1,5 +1,3 @@
-# Claude Code
-.claude/
 
 # Python
 __pycache__/
@@ -32,3 +30,4 @@ Thumbs.db
 
 # Pytest cache
 .pytest_cache/
+

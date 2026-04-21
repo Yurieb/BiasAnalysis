@@ -27,8 +27,9 @@ body {
 
 .header {
     background:var(--surface);
-    padding:18px 40px;
+    padding:16px 40px;
     border-bottom:1px solid var(--border);
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
     display:flex;
     justify-content:space-between;
     align-items:center;
@@ -44,8 +45,13 @@ body {
 
 .search-bar { display:flex; gap:10px; margin-bottom:35px; }
 .search-bar input {
-    flex:1; padding:12px; border:1px solid var(--border);
+    flex:1; padding:13px 16px; border:1px solid var(--border);
     border-radius:6px; font-size:14px; font-family:'DM Sans', sans-serif;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.search-bar input:focus {
+    outline:none; border-color:var(--accent);
+    box-shadow: 0 0 0 3px rgba(42,90,191,0.12);
 }
 .search-bar button {
     background:var(--accent); color:white; border:none;
@@ -209,20 +215,79 @@ body {
 .lean-badge.far-right   { background:#ffe4e6; color:#881337; border:1px solid #fda4af; }
 .lean-badge.unknown     { background:#f1efea; color:#7a756c; border:1px solid var(--border); }
 
+/* Score guide toggle */
+.score-guide-toggle {
+    margin-top:14px; font-size:12px; color:var(--accent);
+    cursor:pointer; font-weight:500; padding:4px 0;
+}
+.score-guide {
+    margin-top:8px; padding:14px 16px;
+    background:#faf9f6; border:1px solid var(--border);
+    border-radius:8px; font-size:12px; line-height:1.6; color:#555;
+}
+
+/* Loading overlay */
+.loading-overlay {
+    display:none; position:fixed; inset:0;
+    background:rgba(245,244,240,0.85); z-index:999;
+    flex-direction:column; align-items:center; justify-content:center;
+    font-family:'DM Sans', sans-serif;
+}
+.loading-overlay.active { display:flex; }
+.spinner {
+    width:40px; height:40px; border:3px solid var(--border);
+    border-top-color:var(--accent); border-radius:50%;
+    animation:spin 0.8s linear infinite; margin-bottom:16px;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading-text { font-size:15px; color:var(--muted); font-weight:500; }
+
 .factuality-badge {
     display:inline-block; margin-left:6px;
     font-size:11px; font-weight:500; padding:2px 8px;
     border-radius:99px; background:#f1efea;
     color:var(--muted); border:1px solid var(--border);
 }
+
+/* Nav */
+.nav-links { display:flex; gap:8px; align-items:center; }
+.nav-link {
+    font-size:13px; font-weight:500; color:var(--muted);
+    text-decoration:none; padding:6px 14px;
+    border-radius:6px; border:1px solid transparent;
+    transition: all 0.15s;
+}
+.nav-link:hover { background:var(--bg); border-color:var(--border); color:var(--text); }
+.nav-link.primary {
+    background:var(--accent); color:#fff; border-color:var(--accent);
+}
+.nav-link.primary:hover { background:#1e46a0; border-color:#1e46a0; color:#fff; }
+
+/* Engine tag colours */
+.tag.roberta  { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
+.tag.vader    { background:#f0fdf4; color:#15803d; border-color:#bbf7d0; }
+.tag.textblob { background:#fefce8; color:#854d0e; border-color:#fef08a; }
+.tag.gemini   { background:#fdf4ff; color:#7e22ce; border-color:#e9d5ff; }
+
+/* Empty state icon */
+.empty-state svg { display:block; margin:0 auto 16px; opacity:0.25; }
 </style>
 </head>
 <body>
 
 <header class="header">
     <div class="logo">Media<span>Lens</span></div>
-    <div><a href="/compare">Compare Sources</a> &nbsp;|&nbsp; <a href="/history">History</a> &nbsp;|&nbsp; <a href="/stats">Stats &rarr;</a></div>
+    <nav class="nav-links">
+        <a class="nav-link" href="/compare">Compare Sources</a>
+        <a class="nav-link" href="/history">History</a>
+        <a class="nav-link primary" href="/stats">Stats &rarr;</a>
+    </nav>
 </header>
+
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Analysing article&hellip;</div>
+</div>
 
 <main class="main">
 
@@ -313,30 +378,12 @@ body {
         <div class="metric-raw">{{ result.bias.bias_intensity_score }} / 100 combined score</div>
     </div>
 
-    <div style="margin-top:20px;padding:16px;border:1px solid #e1ded8;border-radius:10px;background:#faf9f6;font-size:13px;line-height:1.5;color:#555;">
-    <strong style="display:block;margin-bottom:8px;">How to read these scores</strong>
-
-    <div style="margin-bottom:8px;">
-        <strong>Emotional language:</strong><br>
-        Low = mostly factual<br>
-        Moderate = some emotional tone<br>
-        High = dramatic or sensational language
+    <div class="score-guide-toggle" onclick="toggleGuide(this)">&#9658; How to read these scores</div>
+    <div class="score-guide" style="display:none;">
+        <div style="margin-bottom:8px;"><strong>Emotional language:</strong><br>Low = mostly factual &nbsp;·&nbsp; Moderate = some emotional tone &nbsp;·&nbsp; High = dramatic or sensational</div>
+        <div style="margin-bottom:8px;"><strong>Absolute language:</strong><br>Low = careful wording &nbsp;·&nbsp; Moderate = some strong claims &nbsp;·&nbsp; High = very certain or exaggerated</div>
+        <div><strong>Bias score:</strong><br>0–30 = Low &nbsp;·&nbsp; 30–60 = Moderate &nbsp;·&nbsp; 60–100 = High</div>
     </div>
-
-    <div style="margin-bottom:8px;">
-        <strong>Absolute language:</strong><br>
-        Low = careful wording<br>
-        Moderate = some strong claims<br>
-        High = very certain or exaggerated statements
-    </div>
-
-    <div>
-        <strong>Bias score:</strong><br>
-        0–30 = Low bias<br>
-        30–60 = Moderate bias<br>
-        60–100 = High bias
-    </div>
-</div>
 
 </div>
 
@@ -344,11 +391,12 @@ body {
     Article length: <strong style="color:var(--text)">{{ result.bias.total_words }} words</strong>
 </div>
 
+
 <div class="card-footer">
-    <span class="tag">RoBERTa {{ result.roberta_label }}</span>
-    <span class="tag">VADER {{ result.vader_label }}</span>
-    <span class="tag">TextBlob {{ result.textblob_label }}</span>
-    <span class="tag">Gemini {{ result.gemini_label }}</span>
+    <span class="tag roberta">RoBERTa {{ result.roberta_label }}</span>
+    <span class="tag vader">VADER {{ result.vader_label }}</span>
+    <span class="tag textblob">TextBlob {{ result.textblob_label }}</span>
+    <span class="tag gemini">Gemini {{ result.gemini_label }}</span>
     {% if result.agreement %}
         <span class="tag agree">All models agree</span>
     {% else %}
@@ -402,7 +450,10 @@ body {
 
 </div>
 {% else %}
-<div class="empty-state">No articles analysed yet. Paste a URL above to get started.</div>
+<div class="empty-state">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l6 6v10a2 2 0 01-2 2z"/><polyline points="17 2 17 8 23 8"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+    No articles analysed yet. Paste a URL above to get started.
+</div>
 {% endfor %}
 
 </main>
@@ -420,6 +471,18 @@ document.querySelectorAll('.lean-marker[data-lean-pos]').forEach(function(marker
     marker.style.left = marker.getAttribute('data-lean-pos') + '%';
 });
 
+// Show loading spinner when analyse form is submitted
+document.querySelector('.search-bar').addEventListener('submit', function() {
+    document.getElementById('loadingOverlay').classList.add('active');
+});
+
+function toggleGuide(el) {
+    var guide = el.nextElementSibling;
+    var open = guide.style.display === 'block';
+    guide.style.display = open ? 'none' : 'block';
+    el.innerHTML = (open ? '&#9658;' : '&#9660;') + ' How to read these scores';
+}
+
 function toggleBreakdown(el) {
     const breakdown = el.nextElementSibling;
     if (breakdown.style.display === "block") {
@@ -430,6 +493,7 @@ function toggleBreakdown(el) {
         el.innerHTML = "&#9660; Engine breakdown";
     }
 }
+
 
 // Phase 3: feedback submission via data attributes (no inline Jinja in onclick)
 document.querySelectorAll('.feedback-row').forEach(function(row) {
