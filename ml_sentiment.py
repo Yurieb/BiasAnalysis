@@ -11,8 +11,8 @@ load_dotenv()
 
 
 # Load Transformer model one time at startup
-# Upgraded from twitter-roberta-base (tweet-trained, too neutral on news)
-# to siebert/sentiment-roberta-large-english (trained on 15 datasets incl. news)
+# Upgraded from twitter-roberta-base tweet-trainedtoo neutral on news
+# to siebert/sentiment-roberta-large-english rained on 15 datasets
 sentiment_pipeline = pipeline(
     "sentiment-analysis",
     model="siebert/sentiment-roberta-large-english"
@@ -30,7 +30,7 @@ else:
 
 
 # -------------------------------------------------------
-# Phase 1 fix: chunk text instead of hard-truncating to
+# Fix: chunk text instead of hard-truncating to
 # 512 chars. RoBERTa is run on up to MAX_CHUNKS chunks,
 # then results are combined via majority vote.
 # -------------------------------------------------------
@@ -148,7 +148,7 @@ def normalize_to_percent(score_minus1_to_1):
 
 
 # ----------------------------------------
-# Phase 2: Gemini with JSON prompt + political lean
+#  Gemini with JSON prompt and political lean
 # ----------------------------------------
 def get_gemini_sentiment(text: str):
     """
@@ -172,7 +172,7 @@ def get_gemini_sentiment(text: str):
         response = _gemini_model.generate_content(prompt)
         raw      = response.text.strip()
 
-        # Extract JSON from response (handles ```json ... ``` wrappers)
+        # Extract JSON from response
         json_match = re.search(r'\{[^{}]*\}', raw, re.DOTALL)
         if not json_match:
             return "neutral", 0.0, "none"
@@ -266,7 +266,7 @@ def run_sentiment_pipeline(text: str):
     tb_label, tb_score = get_textblob_sentiment(text)
     textblob_percent = normalize_to_percent(tb_score)
 
-    # Gemini (now returns lean as 3rd value)
+    # Gemini
     gemini_label, gemini_score, gemini_lean = get_gemini_sentiment(text)
     gemini_percent = normalize_to_percent(gemini_score)
 
@@ -297,8 +297,8 @@ def run_sentiment_pipeline(text: str):
     else:
         divergence_level = "High"
 
-    #confidence gate — when models are far apart the hybrid
-    # average becomes nois so flag it explicitly instead of blending.
+    # Confidence gate — when models are far apart the hybrid
+    # average becomes noisy so flag it explicitly instead of blending.
     if model_difference > 40:
         narrative_label = "Uncertain \u2014 Models Disagree"
 
@@ -317,7 +317,7 @@ def run_sentiment_pipeline(text: str):
 
         "gemini_label":   gemini_label,
         "gemini_percent": gemini_percent,
-        "gemini_lean":    gemini_lean,       # NEW: political lean from Gemini
+        "gemini_lean":    gemini_lean,       # political lean from Gemini
 
         # Hybrid result
         "narrative_direction_score": narrative_score,

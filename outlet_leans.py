@@ -142,9 +142,61 @@ OUTLET_DATA = {
     "thehindu.com":          {"lean": "center-left",  "factuality": "high",      "country": "India"},
     "hindustantimes.com":    {"lean": "center-right", "factuality": "mixed",     "country": "India"},
     "timesofindia.com":      {"lean": "center",       "factuality": "mixed",     "country": "India"},
+
+    # -------------------------------------------------------
+    # Health and Science specialist outlets
+    # -------------------------------------------------------
+    "webmd.com":             {"lean": "center",       "factuality": "high",      "country": "US"},
+    "healthline.com":        {"lean": "center",       "factuality": "high",      "country": "US"},
+    "medicalnewstoday.com":  {"lean": "center",       "factuality": "high",      "country": "UK"},
+    "statnews.com":          {"lean": "center",       "factuality": "very-high", "country": "US"},
+    "nejm.org":              {"lean": "center",       "factuality": "very-high", "country": "US"},
+    "thelancet.com":         {"lean": "center",       "factuality": "very-high", "country": "UK"},
+    "bmj.com":               {"lean": "center",       "factuality": "very-high", "country": "UK"},
+    "sciencedaily.com":      {"lean": "center",       "factuality": "high",      "country": "US"},
+    "livescience.com":       {"lean": "center",       "factuality": "high",      "country": "US"},
+    "newscientist.com":      {"lean": "center-left",  "factuality": "high",      "country": "UK"},
+    "nature.com":            {"lean": "center",       "factuality": "very-high", "country": "UK"},
+    "scientificamerican.com":{"lean": "center-left",  "factuality": "very-high", "country": "US"},
+    "mayoclinic.org":        {"lean": "center",       "factuality": "very-high", "country": "US"},
+    "who.int":               {"lean": "center",       "factuality": "very-high", "country": "International"},
+    "nih.gov":               {"lean": "center",       "factuality": "very-high", "country": "US"},
+    "cdc.gov":               {"lean": "center",       "factuality": "very-high", "country": "US"},
+
+    # -------------------------------------------------------
+    # Sports (specialist outlets)
+    # -------------------------------------------------------
+    "espn.com":              {"lean": "center",       "factuality": "high",      "country": "US"},
+    "skysports.com":         {"lean": "center",       "factuality": "high",      "country": "UK"},
+    "talksport.com":         {"lean": "center-right", "factuality": "mixed",     "country": "UK"},
+    "dailystar.co.uk":       {"lean": "right",        "factuality": "mixed",     "country": "UK"},
+    "goal.com":              {"lean": "center",       "factuality": "high",      "country": "International"},
+    "theathletic.com":       {"lean": "center",       "factuality": "high",      "country": "US"},
+    "bleacherreport.com":    {"lean": "center",       "factuality": "mixed",     "country": "US"},
+    "sportbible.com":        {"lean": "center",       "factuality": "mixed",     "country": "UK"},
+
+    # -------------------------------------------------------
+    # Technology
+    # -------------------------------------------------------
+    "theverge.com":          {"lean": "center-left",  "factuality": "high",      "country": "US"},
+    "wired.com":             {"lean": "center-left",  "factuality": "high",      "country": "US"},
+    "arstechnica.com":       {"lean": "center-left",  "factuality": "very-high", "country": "US"},
+    "techcrunch.com":        {"lean": "center",       "factuality": "high",      "country": "US"},
+    "engadget.com":          {"lean": "center-left",  "factuality": "high",      "country": "US"},
+    "zdnet.com":             {"lean": "center",       "factuality": "high",      "country": "US"},
+    "bbc.com/technology":    {"lean": "center",       "factuality": "high",      "country": "UK"},
+
+    # -------------------------------------------------------
+    # Ireland
+    # -------------------------------------------------------
+    "rte.ie":                {"lean": "center",       "factuality": "high",      "country": "Ireland"},
+    "irishtimes.com":        {"lean": "center-left",  "factuality": "high",      "country": "Ireland"},
+    "independent.ie":        {"lean": "center-right", "factuality": "mixed",     "country": "Ireland"},
+    "thejournal.ie":         {"lean": "center-left",  "factuality": "high",      "country": "Ireland"},
+    "irishexaminer.com":     {"lean": "center",       "factuality": "high",      "country": "Ireland"},
 }
 
-# Position on a 0-100 Left-Right spectrum bar
+# Position on a 0-100 LeftRight spectrum bar
 LEAN_POSITIONS = {
     "far-left":     5,
     "left":         18,
@@ -176,7 +228,7 @@ FACTUALITY_LABELS = {
 
 def get_outlet_info(domain: str) -> dict:
     """
-    Look up lean + factuality for a domain.
+    Look up lean and factuality for a domain.
     Strips www/news/m subdomains before matching.
     Unknown outlets return lean='unknown'.
     """

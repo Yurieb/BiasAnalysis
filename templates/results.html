@@ -271,6 +271,79 @@ body {
 
 /* Empty state icon */
 .empty-state svg { display:block; margin:0 auto 16px; opacity:0.25; }
+
+/* How it works */
+.how-it-works {
+    display:grid; grid-template-columns:repeat(3,1fr);
+    gap:14px; margin-bottom:32px;
+}
+.how-step {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:10px; padding:18px 16px;
+    display:flex; align-items:flex-start; gap:14px;
+}
+.how-step-num {
+    width:28px; height:28px; border-radius:50%;
+    background:var(--accent); color:#fff;
+    font-size:13px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+}
+.how-step-body { font-size:13px; }
+.how-step-title { font-weight:600; color:var(--text); margin-bottom:3px; }
+.how-step-desc { color:var(--muted); line-height:1.4; font-size:12px; }
+
+/* Active nav */
+.nav-link.active { background:var(--bg); border-color:var(--border); color:var(--text); font-weight:600; }
+
+/* Animated score */
+.score-number { transition: color 0.3s; }
+
+/* Category warning notice */
+.category-notice {
+    background: #fffbeb; border: 1px solid #fde68a;
+    border-radius: 8px; padding: 12px 16px;
+    font-size: 12px; color: #92400e; margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+/* Metrics explainer */
+.metrics-explainer {
+    background: #f8f7f4; border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px;
+    font-size: 12px; color: var(--muted);
+    margin-bottom: 14px; line-height: 1.5;
+}
+.metrics-explainer strong { color: var(--text); }
+
+/* Emotive words chips */
+.emotive-words-block {
+    margin: 0 0 16px;
+    padding: 14px 16px;
+    background: #fff9f0;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+}
+.emotive-words-label {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.06em; color: #92400e; margin-bottom: 10px;
+}
+.emotive-words-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.emotive-chip {
+    font-size: 12px; font-weight: 500; padding: 3px 10px;
+    border-radius: 99px; border: 1px solid;
+}
+.emotive-chip.low      { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+.emotive-chip.moderate { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+.emotive-chip.high     { background: #fff1f2; color: #b91c1c; border-color: #fecdd3; }
+
+/* Score pill background */
+.score-pill {
+    display:inline-block; padding:4px 14px; border-radius:99px; font-size:30px; font-weight:600;
+}
+.score-pill.positive { background:#f0fdf4; color:var(--positive); border:1.5px solid #bbf7d0; }
+.score-pill.negative { background:#fff1f2; color:var(--negative); border:1.5px solid #fecdd3; }
+.score-pill.neutral  { background:#eff6ff; color:var(--neutral);  border:1.5px solid #bfdbfe; }
 </style>
 </head>
 <body>
@@ -278,7 +351,8 @@ body {
 <header class="header">
     <div class="logo">Media<span>Lens</span></div>
     <nav class="nav-links">
-        <a class="nav-link" href="/compare">Compare Sources</a>
+        <a class="nav-link active" href="/">Analyse</a>
+        <a class="nav-link" href="/compare">Compare</a>
         <a class="nav-link" href="/history">History</a>
         <a class="nav-link primary" href="/stats">Stats &rarr;</a>
     </nav>
@@ -286,7 +360,8 @@ body {
 
 <div class="loading-overlay" id="loadingOverlay">
     <div class="spinner"></div>
-    <div class="loading-text">Analysing article&hellip;</div>
+    <div class="loading-text" id="loadingText">Fetching article&hellip;</div>
+    <div style="font-size:12px; color:var(--muted); margin-top:8px;" id="loadingSubtext">This may take 10–20 seconds</div>
 </div>
 
 <main class="main">
@@ -294,6 +369,30 @@ body {
 <div class="hero">
     <h1>Narrative &amp; Bias Analysis</h1>
     <p>Hybrid sentiment fusion using RoBERTa, VADER, TextBlob, and Gemini.</p>
+</div>
+
+<div class="how-it-works">
+    <div class="how-step">
+        <div class="how-step-num">1</div>
+        <div class="how-step-body">
+            <div class="how-step-title">Paste a URL</div>
+            <div class="how-step-desc">Enter any news article URL from any outlet in any country.</div>
+        </div>
+    </div>
+    <div class="how-step">
+        <div class="how-step-num">2</div>
+        <div class="how-step-body">
+            <div class="how-step-title">Four engines analyse it</div>
+            <div class="how-step-desc">RoBERTa, VADER, TextBlob and Gemini each score the article independently.</div>
+        </div>
+    </div>
+    <div class="how-step">
+        <div class="how-step-num">3</div>
+        <div class="how-step-body">
+            <div class="how-step-title">See the results</div>
+            <div class="how-step-desc">Get a Narrative Direction Score, bias rating and outlet political lean.</div>
+        </div>
+    </div>
 </div>
 
 <form class="search-bar" method="POST" action="/analyze">
@@ -317,10 +416,11 @@ body {
         </div>
     </div>
     <div class="score-block">
-        <div class="score-number {% if result.narrative_direction_score > 10 %}positive{% elif result.narrative_direction_score < -10 %}negative{% else %}neutral{% endif %}">
+        <div class="score-pill {% if result.narrative_direction_score > 10 %}positive{% elif result.narrative_direction_score < -10 %}negative{% else %}neutral{% endif %}"
+             data-target="{{ result.narrative_direction_score }}">
             {% if result.narrative_direction_score > 0 %}+{% endif %}{{ result.narrative_direction_score }}
         </div>
-        <div class="score-label">{{ result.narrative_direction_label }}</div>
+        <div class="score-label" style="margin-top:6px;">{{ result.narrative_direction_label }}</div>
     </div>
 </div>
 
@@ -331,7 +431,7 @@ body {
     <div class="labels"><span>Critical</span><span>Balanced</span><span>Supportive</span></div>
 </div>
 
-{% if result.outlet_known %}
+{% if result.outlet_known and result.category in ['Politics', 'General'] %}
 <div class="lean-spectrum">
     <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-bottom:6px;">Source Political Lean</div>
     <div class="lean-bar">
@@ -342,6 +442,12 @@ body {
         <span class="lean-badge {{ result.outlet_lean }}">{{ result.outlet_lean_label }}</span>
         <span class="factuality-badge">Factuality: {{ result.outlet_factuality_label }}</span>
     </div>
+</div>
+{% elif result.outlet_known %}
+<div class="category-notice">
+    <strong>Political Lean:</strong> Not applicable for {{ result.category }} content.
+    The outlet lean database is designed for political reporting.
+    Bias is measured above using emotional and certainty language analysis.
 </div>
 {% endif %}
 
@@ -378,18 +484,33 @@ body {
         <div class="metric-raw">{{ result.bias.bias_intensity_score }} / 100 combined score</div>
     </div>
 
-    <div class="score-guide-toggle" onclick="toggleGuide(this)">&#9658; How to read these scores</div>
-    <div class="score-guide" style="display:none;">
-        <div style="margin-bottom:8px;"><strong>Emotional language:</strong><br>Low = mostly factual &nbsp;·&nbsp; Moderate = some emotional tone &nbsp;·&nbsp; High = dramatic or sensational</div>
-        <div style="margin-bottom:8px;"><strong>Absolute language:</strong><br>Low = careful wording &nbsp;·&nbsp; Moderate = some strong claims &nbsp;·&nbsp; High = very certain or exaggerated</div>
-        <div><strong>Bias score:</strong><br>0–30 = Low &nbsp;·&nbsp; 30–60 = Moderate &nbsp;·&nbsp; 60–100 = High</div>
-    </div>
 
 </div>
+
+{% if result.category in ['Sports', 'Entertainment'] %}
+<div class="category-notice">
+    <strong>Note:</strong> Sentiment scoring is most meaningful for political and current affairs articles.
+    For sports reporting, a high Narrative Score reflects enthusiastic tone — not ideological bias.
+    Check the Bias Intensity Score below for writing style analysis.
+</div>
+{% endif %}
 
 <div style="font-size:12px; color:var(--muted); margin-bottom:14px;">
     Article length: <strong style="color:var(--text)">{{ result.bias.total_words }} words</strong>
 </div>
+
+{% if result.bias.emotive_words %}
+<div class="emotive-words-block">
+    <div class="emotive-words-label">Emotive words detected</div>
+    <div class="emotive-words-list">
+        {% for word, count in result.bias.emotive_words | dictsort(by='value') | reverse | list %}
+        <span class="emotive-chip {% if count >= 3 %}high{% elif count >= 2 %}moderate{% else %}low{% endif %}">
+            {{ word }}{% if count > 1 %} &times;{{ count }}{% endif %}
+        </span>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
 
 
 <div class="card-footer">
@@ -460,7 +581,6 @@ body {
 
 <script>
 // Position spectrum bar markers from data-score attribute
-// This avoids Jinja2 inside style attributes which confuses VS Code's CSS linter
 document.querySelectorAll('.marker[data-score]').forEach(function(marker) {
     var score = parseFloat(marker.getAttribute('data-score'));
     var left = ((score + 100) / 200 * 100).toFixed(1);
@@ -471,9 +591,33 @@ document.querySelectorAll('.lean-marker[data-lean-pos]').forEach(function(marker
     marker.style.left = marker.getAttribute('data-lean-pos') + '%';
 });
 
-// Show loading spinner when analyse form is submitted
+// Multi-stage loading animation
+var loadingStages = [
+    { text: "Fetching article\u2026",            sub: "Scraping article content" },
+    { text: "Running RoBERTa transformer\u2026", sub: "Deep learning sentiment model (40% weight)" },
+    { text: "Running VADER\u2026",               sub: "Rule-based negation-aware scoring (25% weight)" },
+    { text: "Running TextBlob\u2026",            sub: "Lexicon baseline analysis (15% weight)" },
+    { text: "Consulting Gemini API\u2026",       sub: "LLM framing \u0026 political lean detection (20% weight)" },
+    { text: "Fusing results\u2026",              sub: "Weighted hybrid narrative fusion" },
+    { text: "Calculating bias score\u2026",      sub: "Emotive \u0026 certainty language analysis" },
+];
+var _stageIndex = 0;
+var _stageTimer = null;
+
 document.querySelector('.search-bar').addEventListener('submit', function() {
     document.getElementById('loadingOverlay').classList.add('active');
+    _stageIndex = 0;
+    var textEl = document.getElementById('loadingText');
+    var subEl  = document.getElementById('loadingSubtext');
+    function nextStage() {
+        if (_stageIndex < loadingStages.length) {
+            textEl.textContent = loadingStages[_stageIndex].text;
+            subEl.textContent  = loadingStages[_stageIndex].sub;
+            _stageIndex++;
+            _stageTimer = setTimeout(nextStage, 2800);
+        }
+    }
+    nextStage();
 });
 
 function toggleGuide(el) {

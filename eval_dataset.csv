@@ -1,0 +1,21 @@
+id,text,ground_truth_sentiment,ground_truth_bias
+1,"The country's GDP grew by 3.2% last quarter, beating analyst expectations of 2.8%. Exports rose and unemployment fell to a five-year low.",positive,low
+2,"Scientists have published new research showing that regular exercise reduces the risk of heart disease by up to 35%. The study followed 10,000 participants over ten years.",positive,low
+3,"The government announced a new infrastructure programme that will fund repairs to roads and bridges across the country over the next five years.",neutral,low
+4,"Parliament held its weekly session on Tuesday. Members debated proposed changes to environmental legislation. No vote was taken.",neutral,low
+5,"The central bank held interest rates steady at 4.5%, citing stable inflation. The decision was widely expected by markets.",neutral,low
+6,"The prime minister met with foreign leaders to discuss trade agreements. Talks are expected to continue next month.",neutral,low
+7,"Flooding across the northern regions has left thousands homeless. Rescue teams are working around the clock as the death toll rises.",negative,moderate
+8,"The shocking collapse of the company wiped billions off the stock market in a single day. Furious investors condemned the board's reckless decisions.",negative,high
+9,"A catastrophic explosion at the factory killed 12 workers and injured dozens more. Authorities have launched a crisis investigation into the devastating blast.",negative,high
+10,"Outrage as the government slammed critics who exposed the scandalous cover-up. The radical policy has triggered a brutal crackdown on dissent.",negative,high
+11,"The new hospital wing opened today, providing 200 additional beds for patients. Staff celebrated the long-awaited expansion.",positive,low
+12,"Record numbers of tourists visited the city last summer, boosting the local economy and creating hundreds of new jobs.",positive,low
+13,"The team won the championship in a stunning victory, defeating their rivals 3–0 in front of a sell-out crowd.",positive,moderate
+14,"Crime rates have fallen for the third consecutive year, according to official statistics released by the Home Office.",positive,low
+15,"The chaotic scenes outside parliament turned violent as protesters clashed with police. Dozens were arrested in the alarming confrontation.",negative,high
+16,"Heavy rain is forecast for the weekend across most of the country. Temperatures will remain below average for the time of year.",neutral,low
+17,"The minister announced plans to review the current healthcare funding model. A consultation with stakeholders is expected later this year.",neutral,low
+18,"The airline reported a loss of 400 million euros for the financial year, blaming rising fuel costs and reduced passenger numbers.",negative,low
+19,"Local elections are scheduled for May. Candidates from all major parties have begun campaigning across the constituency.",neutral,low
+20,"The horrifying attack left the community in shock and despair. Authorities described it as one of the most terrifying incidents in the region's history.",negative,high

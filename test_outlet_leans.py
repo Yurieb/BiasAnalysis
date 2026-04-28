@@ -4,7 +4,7 @@ Tests for outlet_leans.py — political lean database lookups.
 from outlet_leans import get_outlet_info
 
 
-# --- Known outlets return correct lean ---
+# Known outlets return correct lean 
 
 def test_bbc_is_center():
     info = get_outlet_info("bbc.com")
@@ -31,7 +31,7 @@ def test_guardian_is_center_left():
     assert info["lean"] == "center-left"
 
 
-# --- Factuality checks ---
+# Factuality checks
 
 def test_reuters_factuality_very_high():
     info = get_outlet_info("reuters.com")
@@ -46,7 +46,7 @@ def test_nytimes_factuality_high():
     assert info["factuality"] == "high"
 
 
-# --- known flag ---
+#known flag
 
 def test_known_outlet_returns_true():
     info = get_outlet_info("bbc.com")
@@ -61,7 +61,7 @@ def test_unknown_outlet_lean_is_unknown():
     assert info["lean"] == "unknown"
 
 
-# --- Subdomain stripping ---
+#  Subdomain stripping 
 
 def test_www_prefix_stripped():
     info = get_outlet_info("www.bbc.com")
@@ -77,7 +77,7 @@ def test_m_prefix_stripped():
     assert info["known"] is True
 
 
-# --- lean_position is a valid number ---
+# lean_position is a valid number
 
 def test_lean_position_is_number():
     info = get_outlet_info("bbc.com")
@@ -93,7 +93,7 @@ def test_center_position_is_50():
     assert info["lean_position"] == 50
 
 
-# --- Labels are human-readable strings ---
+#  Labels are human-readable strings 
 
 def test_lean_label_is_string():
     info = get_outlet_info("bbc.com")

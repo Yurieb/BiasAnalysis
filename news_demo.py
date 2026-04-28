@@ -121,15 +121,15 @@ class UserFeedback(db.Model):
     """Phase 3: stores user correction ratings for each analysis."""
     id         = db.Column(db.Integer, primary_key=True)
     article_id = db.Column(db.Integer, db.ForeignKey("article.id"), nullable=False)
-    rating     = db.Column(db.Integer)        # +1 = accurate, -1 = inaccurate
-    user_lean  = db.Column(db.String(20))     # user's own lean assessment
+    rating     = db.Column(db.Integer)       
+    user_lean  = db.Column(db.String(20))    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     article = db.relationship("Article", backref=db.backref("feedback", lazy=True))
 
 
 # -------------------------------------------------------
-# DB migration — add new columns to existing
+# DB migration adds new columns to existing
 # tables without destroying data already in news.db
 # -------------------------------------------------------
 def run_migrations():
@@ -159,11 +159,11 @@ def run_migrations():
                 conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {col_type}"))
                 conn.commit()
             except Exception:
-                pass   # Column already exists — safe to skip
+                pass   
 
 
 # -------------------------------------------------------
-# Re-scrape sources.txt only when the file changes on disk.
+# Rescrape sources.txt only when the file changes on disk.
 # -------------------------------------------------------
 _analysis_cache: dict = {"results": None, "mtime": 0.0}
 
@@ -238,7 +238,7 @@ def analyze_single_url(url: str) -> dict:
 
     gemini_label     = sentiment_data.get("gemini_label",   "neutral")
     gemini_percent   = sentiment_data.get("gemini_percent", 50.0)
-    gemini_lean      = sentiment_data.get("gemini_lean",    "none")     # Phase 2
+    gemini_lean      = sentiment_data.get("gemini_lean",    "none")    
 
     narrative_direction_label = sentiment_data["narrative_direction_label"]
     narrative_direction_score = sentiment_data["narrative_direction_score"]
@@ -255,7 +255,6 @@ def analyze_single_url(url: str) -> dict:
     source_domain = urlparse(url).netloc
     outlet_info = get_outlet_info(source_domain)
 
-    # ---- Persist to DB ----
     article_row = Article.query.filter_by(url=url).first()
     if not article_row:
         article_row = Article(url=url, title=title, source=source_domain, text=body)
@@ -297,8 +296,9 @@ def analyze_single_url(url: str) -> dict:
     db.session.add(analysis)
     db.session.commit()
 
+    #  needed for feedback
     return {
-        "article_id": article_row.id,       # Phase 3: needed for feedback
+        "article_id": article_row.id,       
         "title":    title,
         "source":   source_domain,
         "url":      url,
@@ -322,7 +322,7 @@ def analyze_single_url(url: str) -> dict:
 
         "gemini_label":   gemini_label,
         "gemini_percent": gemini_percent,
-        "gemini_lean":    gemini_lean,           # Phase 2
+        "gemini_lean":    gemini_lean,          
 
         # Legacy fields used by history page
         "sentiment":       sentiment_label,
@@ -335,7 +335,7 @@ def analyze_single_url(url: str) -> dict:
 
         "bias": bias_info,
 
-        # Outlet political lean (from AllSides/MBFC database)
+        # Outlet political lean 
         "outlet_lean":          outlet_info["lean"],
         "outlet_lean_label":    outlet_info["lean_label"],
         "outlet_lean_position": outlet_info["lean_position"],
@@ -474,7 +474,7 @@ def export_csv():
         if not url:
             continue
 
-        # Look up stored result — no re-analysis needed
+        # Look up stored result no re-analysis needed
         article = Article.query.filter_by(url=url).first()
         if not article:
             continue
@@ -519,7 +519,7 @@ def export_csv():
 
 
 # -------------------------------------------------------
-# Phase 3: Correction ratings
+# Correction ratings
 # -------------------------------------------------------
 @app.route("/feedback", methods=["POST"])
 def submit_feedback():
@@ -600,9 +600,6 @@ def stats():
     )
 
 
-# -------------------------------------------------------
-# Entry point
-# -------------------------------------------------------
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()

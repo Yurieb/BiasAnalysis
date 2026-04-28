@@ -223,6 +223,80 @@ td:last-child { text-align:right; font-weight:600; color:var(--text); }
         {% endif %}
     </div>
 
+    <!-- Charts row -->
+    {% if category_counts or lean_counts %}
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px;">
+
+        {% if category_counts %}
+        <div class="section" style="margin-bottom:0;">
+            <div class="section-title">Category Breakdown</div>
+            <canvas id="categoryChart" height="220"></canvas>
+        </div>
+        {% endif %}
+
+        <div class="section" style="margin-bottom:0;">
+            <div class="section-title">User-Reported Lean Distribution</div>
+            <canvas id="leanChart" height="220"></canvas>
+        </div>
+
+    </div>
+    {% endif %}
+
 </main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.color = '#7a756c';
+
+{% if category_counts %}
+var categoryCtx = document.getElementById('categoryChart').getContext('2d');
+new Chart(categoryCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ category_counts | map(attribute=0) | list | tojson }},
+        datasets: [{
+            label: 'Articles',
+            data: {{ category_counts | map(attribute=1) | list | tojson }},
+            backgroundColor: ['#bfdbfe','#bbf7d0','#fde68a','#e9d5ff','#fed7aa','#fecdd3'],
+            borderRadius: 6,
+            borderWidth: 0,
+        }]
+    },
+    options: {
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#e1ded8' } },
+            x: { grid: { display: false } }
+        }
+    }
+});
+{% endif %}
+
+var leanCtx = document.getElementById('leanChart').getContext('2d');
+new Chart(leanCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Left', 'Center', 'Right', 'No lean'],
+        datasets: [{
+            data: [
+                {{ lean_counts.left }},
+                {{ lean_counts.center }},
+                {{ lean_counts.right }},
+                {{ lean_counts.none }}
+            ],
+            backgroundColor: ['#bfdbfe', '#e1ded8', '#fecdd3', '#f1efea'],
+            borderColor:     ['#1d4ed8', '#7a756c', '#b91c1c', '#7a756c'],
+            borderWidth: 1.5,
+        }]
+    },
+    options: {
+        plugins: {
+            legend: { position: 'bottom', labels: { padding: 16, font: { size: 12 } } }
+        },
+        cutout: '65%'
+    }
+});
+</script>
 </body>
 </html>

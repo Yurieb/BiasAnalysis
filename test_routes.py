@@ -27,10 +27,8 @@ def client():
         yield client
 
 
-# -------------------------------------------------------
-# Homepage
-# -------------------------------------------------------
 
+# Homepage
 def test_homepage_loads(client):
     response = client.get("/")
     assert response.status_code == 200
@@ -40,10 +38,7 @@ def test_homepage_contains_medialens(client):
     assert b"MediaLens" in response.data
 
 
-# -------------------------------------------------------
 # Compare page
-# -------------------------------------------------------
-
 def test_compare_page_loads(client):
     response = client.get("/compare")
     assert response.status_code == 200
@@ -53,19 +48,13 @@ def test_compare_page_has_form(client):
     assert b"form" in response.data.lower()
 
 
-# -------------------------------------------------------
 # History page
-# -------------------------------------------------------
-
 def test_history_page_loads(client):
     response = client.get("/history")
     assert response.status_code == 200
 
 
-# -------------------------------------------------------
 # Stats page
-# -------------------------------------------------------
-
 def test_stats_page_loads(client):
     response = client.get("/stats")
     assert response.status_code == 200
@@ -75,10 +64,8 @@ def test_stats_page_shows_zero_analyses(client):
     assert response.status_code == 200
 
 
-# -------------------------------------------------------
-# Feedback route
-# -------------------------------------------------------
 
+# Feedback route
 def test_feedback_rejects_missing_data(client):
     response = client.post("/feedback", data={})
     # Should return an error, not a 200
@@ -93,19 +80,12 @@ def test_feedback_rejects_invalid_rating(client):
     assert response.status_code in [400, 422]
 
 
-# -------------------------------------------------------
 # CSV export
-# -------------------------------------------------------
-
 def test_export_csv_loads(client):
     response = client.post("/export-csv")
-    # Should return CSV or empty response, not a crash
+    # Should return CSV or empty response not a crash
     assert response.status_code == 200
 
-
-# -------------------------------------------------------
-# 404 handling
-# -------------------------------------------------------
 
 def test_unknown_route_returns_404(client):
     response = client.get("/this-page-does-not-exist")

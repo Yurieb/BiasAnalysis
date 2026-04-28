@@ -1,6 +1,6 @@
 """
 Tests for sentiment engines and bias analysis.
-Does NOT call Gemini or RoBERTa (no API key / GPU needed).
+Does NOT call Gemini or RoBERTa no API key / GPU needed.
 """
 from ml_sentiment import get_vader_sentiment, get_textblob_sentiment
 from bias_analysis import analyse_bias_language
@@ -8,7 +8,7 @@ from bias_analysis import analyse_bias_language
 
 # -------------------------------------------------------
 # VADER tests
-# get_vader_sentiment returns a tuple: (label, score)
+# get_vader_sentiment returns a tuple (label, score)
 # -------------------------------------------------------
 
 def test_vader_positive_sentence():

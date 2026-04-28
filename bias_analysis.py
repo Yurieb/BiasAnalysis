@@ -10,7 +10,7 @@ EMOTIVE_WORDS = {
     "terrifying", "nightmarish", "catastrophic", "tragic", "heartbreaking",
     "disturbing", "frightening", "dire", "grim", "harrowing",
 
-    # Conflict & aggression language
+    # Conflict and aggression language
     "slam", "slammed", "attack", "attacked", "blow", "clash", "clashes",
     "battle", "fight", "war", "accuse", "accused", "blasted", "hammered",
     "condemned", "denounced", "lashed", "slammed", "ripped", "tore",
@@ -47,7 +47,7 @@ EMOTIVE_WORDS = {
     "revolutionary", "visionary", "historic", "legendary", "iconic"
 }
 
-# Certainty / absolutist language — overstates facts, sign of biased writing
+# Certainty / absolutist language 
 CERTAINTY_WORDS = {
     # Classic absolutist words
     "always", "never", "everyone", "nobody", "no one",
@@ -71,7 +71,7 @@ CERTAINTY_WORDS = {
 def analyse_bias_language(text: str):
     """
     Lightweight, explainable bias indicators based on language.
-    Returns normalised metrics (per 1000 words) for fair comparison across articles.
+    Returns normalised metrics per 1000 words for a  fair comparison across articles.
     """
 
     if not text:
@@ -113,7 +113,8 @@ def analyse_bias_language(text: str):
     certainty_per_1000 = round((certainty_count / total_words) * 1000, 1) if total_words else 0
 
     # Bias Intensity Score 0-100 combines emotive and certainty
-    # Emotive: 0-5% of words -> 0-50 points; Certainty: 0-2% -> 0-50 points
+    # Emotive: 0-5% of words -> 0-50 points
+    # Certainty 0-2% -> 0-50 points
     emotive_score = min(emotive_ratio * 1000, 50)  
     certainty_score = min(certainty_ratio * 2500, 50)  
     bias_intensity_score = min(100, round(emotive_score + certainty_score))
@@ -138,10 +139,10 @@ def analyse_bias_language(text: str):
 
 def compute_bias_intensity(emotive_ratio, certainty_per_1000):
 
-    # Convert emotional % (0–1) to 0–100 scale
+    # Convert emotional % 0–1 to 0–100 scale
     emotional_score = emotive_ratio * 100
 
-    # Normalize certainty (cap at 10 per 1k words)
+    # Normalize certainty cap at 10 per 1k words
     certainty_score = min(certainty_per_1000, 10) * 10
 
     # Weighted bias intensity

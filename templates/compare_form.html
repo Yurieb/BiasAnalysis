@@ -15,7 +15,12 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text)
 .header { background:var(--surface); padding:18px 40px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
 .logo { font-family:'DM Serif Display',serif; font-size:20px; }
 .logo span { color:var(--accent); }
-.nav a { color:var(--accent); text-decoration:none; font-size:14px; margin-left:20px; }
+.nav-links { display:flex; gap:8px; align-items:center; }
+.nav-link { font-size:13px; font-weight:500; color:var(--muted); text-decoration:none; padding:6px 14px; border-radius:6px; border:1px solid transparent; transition: all 0.15s; }
+.nav-link:hover { background:var(--bg); border-color:var(--border); color:var(--text); }
+.nav-link.active { background:var(--bg); border-color:var(--border); color:var(--text); font-weight:600; }
+.nav-link.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+.nav-link.primary:hover { background:#1e46a0; }
 .main { max-width:680px; margin:40px auto; padding:0 20px; }
 .hero h1 { font-family:'DM Serif Display',serif; font-size:34px; margin-bottom:10px; }
 .hero p { color:var(--muted); font-size:14px; margin-bottom:28px; }
@@ -35,7 +40,6 @@ input::placeholder { color:#b0aba3; }
 .error { background:#fff1f2; border:1px solid #fecdd3; border-radius:8px; padding:12px 16px; margin-bottom:16px; font-size:13px; color:#b91c1c; }
 .hint { font-size:12px; color:var(--muted); margin-top:10px; text-align:center; }
 
-/* Auto-detected badge shown next to filled fields */
 .auto-badge {
     display:inline-block; font-size:10px; font-weight:600;
     background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0;
@@ -50,11 +54,20 @@ input::placeholder { color:#b0aba3; }
 
 <header class="header">
     <div class="logo">Media<span>Lens</span></div>
-    <div class="nav">
-        <a href="/">Home</a>
-        <a href="/history">History</a>
-    </div>
+    <nav class="nav-links">
+        <a class="nav-link" href="/">Analyse</a>
+        <a class="nav-link active" href="/compare">Compare</a>
+        <a class="nav-link" href="/history">History</a>
+        <a class="nav-link primary" href="/stats">Stats &rarr;</a>
+    </nav>
 </header>
+
+<div id="loadingOverlay" style="display:none; position:fixed; inset:0; background:rgba(245,244,240,0.88); z-index:999; flex-direction:column; align-items:center; justify-content:center; font-family:'DM Sans',sans-serif;">
+    <div style="width:40px;height:40px;border:3px solid #e1ded8;border-top-color:#2a5abf;border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:16px;"></div>
+    <div style="font-size:15px;color:#7a756c;font-weight:500;" id="loadingText">Fetching articles&hellip;</div>
+    <div style="font-size:12px;color:#7a756c;margin-top:8px;" id="loadingSubtext">Analysing each source — this may take 20–40 seconds</div>
+</div>
+<style>@keyframes spin { to { transform:rotate(360deg); } }</style>
 
 <main class="main">
 
@@ -246,12 +259,12 @@ function autoDetect(urlInput) {
     var url = urlInput.value.trim();
     if (!url) return;
 
-    // Extract hostname, strip www.
+    // Extract hostname  strip www.
     var match = url.match(/^https?:\/\/(?:www\.)?([^\/]+)/i);
     if (!match) return;
     var host = match[1].toLowerCase();
 
-    // Try exact match first, then strip subdomains one level at a time
+    // Try exact match first then strip subdomains one level at a time
     var info = null;
     var parts = host.split(".");
     for (var i = 0; i < parts.length - 1; i++) {
@@ -266,6 +279,32 @@ function autoDetect(urlInput) {
     }
 }
 
+// Loading animation for compare form
+var compareStages = [
+    { text: "Fetching articles\u2026",             sub: "Scraping each source URL" },
+    { text: "Running RoBERTa transformer\u2026",   sub: "Deep learning sentiment (40% weight)" },
+    { text: "Running VADER \u0026 TextBlob\u2026", sub: "Rule-based and lexicon engines" },
+    { text: "Consulting Gemini API\u2026",         sub: "LLM framing \u0026 political lean detection" },
+    { text: "Fusing results\u2026",                sub: "Weighted hybrid narrative fusion" },
+    { text: "Building comparison\u2026",           sub: "Calculating spread and verdicts" },
+];
+
+document.querySelector('form').addEventListener('submit', function() {
+    var overlay = document.getElementById('loadingOverlay');
+    overlay.style.display = 'flex';
+    var textEl = document.getElementById('loadingText');
+    var subEl  = document.getElementById('loadingSubtext');
+    var i = 0;
+    function next() {
+        if (i < compareStages.length) {
+            textEl.textContent = compareStages[i].text;
+            subEl.textContent  = compareStages[i].sub;
+            i++;
+            setTimeout(next, 3500);
+        }
+    }
+    next();
+});
 </script>
 </body>
 </html>
